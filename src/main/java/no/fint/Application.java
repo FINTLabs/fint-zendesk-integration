@@ -1,8 +1,12 @@
-package no.fint.fint.zendesk;
+package no.fint;
 
+import no.fint.cache.annotations.EnableFintCache;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
+@EnableFintCache
+@EnableScheduling
 @SpringBootApplication
 public class Application {
 

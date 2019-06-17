@@ -17,13 +17,28 @@ configurations {
 
 repositories {
     mavenCentral()
+    mavenLocal()
+    jcenter()
+    repositories {
+        maven {
+            url "http://dl.bintray.com/fint/maven"
+        }
+    }
 }
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    compile('no.fint:fint-portal-api:0-SNAPSHOT')
+    compile('no.fint:fint-cache:0-SNAPSHOT') {
+        exclude group: 'no.fint'
+    }
+
     compileOnly 'org.projectlombok:lombok'
+
     annotationProcessor 'org.projectlombok:lombok'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
 }
