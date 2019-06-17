@@ -1,15 +1,13 @@
-package no.fint.zendesk.model;
+package no.fint.zendesk.model.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Photo {
+public class ThumbnailsItem {
     private String contentType;
     private int size;
     private boolean inline;
@@ -18,7 +16,6 @@ public class Photo {
     private int width;
     private String contentUrl;
     private long id;
-    private List<ThumbnailsItem> thumbnails;
     private String url;
     private int height;
 }

@@ -22,11 +22,14 @@ public class UserSyncronizingService {
 
 
     @Autowired
-    private BlockingQueue<Container> contactBlockingQueue;
+    private BlockingQueue<Container> userSynchronizeQueue;
+
+    @Autowired
+    private BlockingQueue<String> userDeleteQueue;
 
     @Scheduled(fixedRateString = "${fint.zendesk.prov.sync.rate:4000}")
     private void synchronize() throws InterruptedException {
-        Container contact = contactBlockingQueue.poll(1, TimeUnit.SECONDS);
+        Container contact = userSynchronizeQueue.poll(1, TimeUnit.SECONDS);
 
         if (contact == null) return;
 
@@ -43,9 +46,23 @@ public class UserSyncronizingService {
             }
         } catch (WebClientResponseException e) {
             log.debug("Adding contact back in queue for retry.");
-            contactBlockingQueue.add(contact);
+            userSynchronizeQueue.add(contact);
         }
-        log.debug("{} contacts in queue", contactBlockingQueue.size());
+        log.debug("{} contacts in queue", userSynchronizeQueue.size());
+    }
+
+    @Scheduled(fixedRateString = "${fint.zendesk.prov.delete.rate:600000}")
+    private void clean() throws InterruptedException {
+
+        String id = userDeleteQueue.poll(1, TimeUnit.SECONDS);
+
+        if (id == null) return;
+
+        try {
+            zenDeskUserService.deleteZenDeskUser(id);
+        } catch (WebClientResponseException e) {
+            log.error("Unable to delete user {}", id);
+        }
     }
 
 

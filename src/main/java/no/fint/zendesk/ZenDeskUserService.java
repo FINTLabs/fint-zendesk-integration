@@ -6,16 +6,19 @@ import no.fint.portal.model.contact.ContactService;
 import no.fint.portal.model.organisation.Organisation;
 import no.fint.portal.model.organisation.OrganisationService;
 import no.fint.provisioning.model.Container;
-import no.fint.zendesk.model.ZenDeskUser;
-import no.fint.zendesk.model.ZenDeskUserRequest;
-import no.fint.zendesk.model.ZenDeskUserResponse;
+import no.fint.zendesk.model.user.ZenDeskUser;
+import no.fint.zendesk.model.user.ZenDeskUserRequest;
+import no.fint.zendesk.model.user.ZenDeskUserResponse;
+import no.fint.zendesk.model.user.ZenDeskUsersResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -71,6 +74,44 @@ public class ZenDeskUserService {
                     return Mono.error(response);
                 })
                 .block();
+    }
+
+    public void deleteZenDeskUser(String id) {
+        log.debug("Deleting user {}", id);
+
+        webClient.delete()
+                .uri(String.format("users/%s.json", id))
+                .retrieve()
+                .bodyToMono(ZenDeskUserResponse.class)
+                .onErrorResume(response -> {
+                    if (response instanceof WebClientResponseException) {
+                        log.info("\t> Body: {}", ((WebClientResponseException) response).getResponseBodyAsString());
+                    }
+                    return Mono.error(response);
+                })
+                .block();
+    }
+
+    public List<String> getOrphantUsers() {
+        List<String> contacts = contactService.getContacts().stream().map(Contact::getSupportId).collect(Collectors.toList());
+        List<String> zenDeskUsers = getZenDeskUsers().stream().map(z -> Long.toString(z.getId())).collect(Collectors.toList());
+        zenDeskUsers.removeAll(contacts);
+        return zenDeskUsers;
+    }
+
+    private List<ZenDeskUser> getZenDeskUsers() {
+        ZenDeskUsersResponse zenDeskUsersResponse = webClient.get()
+                .uri("users.json")
+                .retrieve()
+                .bodyToMono(ZenDeskUsersResponse.class)
+                .onErrorResume(response -> {
+                    if (response instanceof WebClientResponseException) {
+                        log.info("\t> Body: {}", ((WebClientResponseException) response).getResponseBodyAsString());
+                    }
+                    return Mono.error(response);
+                })
+                .block();
+        return zenDeskUsersResponse.getUsers();
     }
 
     private ZenDeskUser contactToZenDeskUser(Contact contact) {

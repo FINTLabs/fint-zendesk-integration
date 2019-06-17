@@ -1,4 +1,4 @@
-package no.fint.zendesk.model;
+package no.fint.zendesk.model.user;
 
 import lombok.*;
 

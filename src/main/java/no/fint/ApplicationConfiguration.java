@@ -40,14 +40,14 @@ public class ApplicationConfiguration {
     }
 
     @Bean
-    public BlockingQueue<Container> containerBlockingQueue() {
+    public BlockingQueue<Container> userSynchronizeQueue() {
         return new LinkedBlockingQueue<>();
     }
-    /*
+
     @Bean
-    public BlockingQueue<DTO2> containerBlockingQueue() { return new LinkedBlockingQueue<>();
+    public BlockingQueue<String> userDeleteQueue() {
+        return new LinkedBlockingQueue<>();
     }
-     */
 
 
     private ExchangeFilterFunction logResponse() {
