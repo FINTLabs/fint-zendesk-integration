@@ -2,6 +2,7 @@ package no.fint.provisioning;
 
 
 import lombok.extern.slf4j.Slf4j;
+import no.fint.ApplicationConfiguration;
 import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.ZenDeskUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ public class UserSynchronizingService {
     @Autowired
     private ZenDeskUserService zenDeskUserService;
 
+    @Autowired
+    private ApplicationConfiguration configuration;
+
 
     @Autowired
     private BlockingQueue<UserSynchronizationObject> userSynchronizeQueue;
@@ -27,13 +31,13 @@ public class UserSynchronizingService {
     @Autowired
     private BlockingQueue<String> userDeleteQueue;
 
-    @Scheduled(fixedRateString = "${fint.zendesk.user.sync.rate:4000}")
+    @Scheduled(fixedRateString = "${fint.zendesk.user.sync.rate:60000}")
     private void synchronize() throws InterruptedException {
         UserSynchronizationObject contact = userSynchronizeQueue.poll(1, TimeUnit.SECONDS);
 
         if (contact == null) return;
 
-        if (contact.getAttempts().incrementAndGet() > 10) {
+        if (contact.getAttempts().incrementAndGet() > configuration.getUserSyncMaxRetryAttempts()) {
             log.debug("Unable to synchronize contact {} after 10 retries.", contact.getContact().getNin());
             return;
         }

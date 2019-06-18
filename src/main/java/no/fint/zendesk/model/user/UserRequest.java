@@ -1,4 +1,4 @@
-package no.fint.zendesk.model.ticket;
+package no.fint.zendesk.model.user;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class TicketRequest {
-    private Ticket ticket;
+public class UserRequest {
+    private User user;
 }

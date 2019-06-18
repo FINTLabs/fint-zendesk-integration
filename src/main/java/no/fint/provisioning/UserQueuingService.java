@@ -34,7 +34,6 @@ public class UserQueuingService {
     private long lastUpdated;
 
 
-
     @PostConstruct
     private void init() {
         contactCache = new FintCache<>();

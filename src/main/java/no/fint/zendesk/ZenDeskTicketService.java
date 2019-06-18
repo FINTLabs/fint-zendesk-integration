@@ -1,8 +1,8 @@
 package no.fint.zendesk;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import no.fint.provisioning.model.TicketSynchronizationObject;
 import no.fint.zendesk.model.ticket.Ticket;
 import no.fint.zendesk.model.ticket.TicketRequest;
 import no.fint.zendesk.model.ticket.TicketResponse;
@@ -19,17 +19,11 @@ public class ZenDeskTicketService {
     @Autowired
     private WebClient webClient;
 
-    @Autowired
-    private ObjectMapper objectMapper;
 
-    public Ticket createTicket(Ticket ticket) {
-
-        try {
-            String s = objectMapper.writeValueAsString(new TicketRequest(ticket));
-            log.info(s);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+    public Ticket createTicket(TicketSynchronizationObject ticketSynchronizationObject) {
+        Ticket ticket = ticketSynchronizationObject.getTicket();
+        log.debug("Creating ticket.");
+        log.debug("\tAttempt: {}", ticketSynchronizationObject.getAttempts());
         TicketResponse ticketResponse = webClient.post()
                 .uri("tickets.json")
                 .syncBody(new TicketRequest(ticket))

@@ -2,7 +2,6 @@ package no.fint.provisioning.model;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import no.fint.portal.model.contact.Contact;
 import no.fint.zendesk.model.ticket.Ticket;
 
 import java.io.Serializable;

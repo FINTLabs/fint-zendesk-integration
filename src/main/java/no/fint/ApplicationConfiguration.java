@@ -1,5 +1,6 @@
 package no.fint;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.provisioning.model.TicketSynchronizationObject;
 import no.fint.provisioning.model.UserSynchronizationObject;
@@ -29,6 +30,13 @@ public class ApplicationConfiguration {
     @Value("${fint.zendesk.token}")
     private String token;
 
+    @Getter
+    @Value("${fint.zendesk.user.sync.max-retry-attempts:10}")
+    private int userSyncMaxRetryAttempts;
+
+    @Getter
+    @Value("${fint.zendesk.ticket.sync.max-retry-attempts:10}")
+    private int ticketSyncMaxRetryAttempts;
 
     @Bean
     public WebClient webClient() {
@@ -36,6 +44,7 @@ public class ApplicationConfiguration {
                 .baseUrl(zenDeskBaseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .filter(ExchangeFilterFunctions.basicAuthentication(username, token))
+                .filter(logRequest())
                 .filter(logResponse())
                 .build();
     }
@@ -58,8 +67,16 @@ public class ApplicationConfiguration {
 
     private ExchangeFilterFunction logResponse() {
         return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
-            log.info("\t> {}", clientResponse.statusCode());
+            log.info("\t{}", clientResponse.statusCode());
             return Mono.just(clientResponse);
+        });
+    }
+
+    private ExchangeFilterFunction logRequest() {
+        return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
+            log.debug("\tRequest: {} {}", clientRequest.method(), clientRequest.url());
+            clientRequest.headers().forEach((name, values) -> values.forEach(value -> log.debug("\t{}={}", name, value)));
+            return Mono.just(clientRequest);
         });
     }
 }

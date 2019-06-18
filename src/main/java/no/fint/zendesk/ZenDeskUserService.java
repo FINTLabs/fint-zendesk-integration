@@ -6,10 +6,10 @@ import no.fint.portal.model.contact.ContactService;
 import no.fint.portal.model.organisation.Organisation;
 import no.fint.portal.model.organisation.OrganisationService;
 import no.fint.provisioning.model.UserSynchronizationObject;
-import no.fint.zendesk.model.user.ZenDeskUser;
-import no.fint.zendesk.model.user.ZenDeskUserRequest;
-import no.fint.zendesk.model.user.ZenDeskUserResponse;
-import no.fint.zendesk.model.user.ZenDeskUsersResponse;
+import no.fint.zendesk.model.user.User;
+import no.fint.zendesk.model.user.UserRequest;
+import no.fint.zendesk.model.user.UserResponse;
+import no.fint.zendesk.model.user.UsersResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -36,13 +36,13 @@ public class ZenDeskUserService {
     public void createZenDeskUsers(UserSynchronizationObject userSynchronizationObject) {
         Contact contact = userSynchronizationObject.getContact();
         log.debug("Creating contact {}", contact.getNin());
-        log.debug("Attempt: {}", userSynchronizationObject.getAttempts());
+        log.debug("\tAttempt: {}", userSynchronizationObject.getAttempts());
 
         webClient.post()
                 .uri("users")
-                .syncBody(new ZenDeskUserRequest(contactToZenDeskUser(contact)))
+                .syncBody(new UserRequest(contactToZenDeskUser(contact)))
                 .retrieve()
-                .bodyToMono(ZenDeskUserResponse.class)
+                .bodyToMono(UserResponse.class)
                 .doOnSuccess(response -> {
                     contact.setSupportId(Long.toString(response.getUser().getId()));
                     contactService.updateContact(contact);
@@ -60,13 +60,13 @@ public class ZenDeskUserService {
     public void updateZenDeskUser(UserSynchronizationObject userSynchronizationObject) {
         Contact contact = userSynchronizationObject.getContact();
         log.debug("Updating contact {}", contact.getNin());
-        log.debug("Attempt: {}", userSynchronizationObject.getAttempts());
+        log.debug("\tAttempt: {}", userSynchronizationObject.getAttempts());
 
         webClient.put()
                 .uri(String.format("users/%s.json", contact.getSupportId()))
-                .syncBody(new ZenDeskUserRequest(contactToZenDeskUser(contact)))
+                .syncBody(new UserRequest(contactToZenDeskUser(contact)))
                 .retrieve()
-                .bodyToMono(ZenDeskUserResponse.class)
+                .bodyToMono(UserResponse.class)
                 .onErrorResume(response -> {
                     if (response instanceof WebClientResponseException) {
                         log.info("\t> Body: {}", ((WebClientResponseException) response).getResponseBodyAsString());
@@ -82,7 +82,7 @@ public class ZenDeskUserService {
         webClient.delete()
                 .uri(String.format("users/%s.json", id))
                 .retrieve()
-                .bodyToMono(ZenDeskUserResponse.class)
+                .bodyToMono(UserResponse.class)
                 .onErrorResume(response -> {
                     if (response instanceof WebClientResponseException) {
                         log.info("\t> Body: {}", ((WebClientResponseException) response).getResponseBodyAsString());
@@ -104,12 +104,12 @@ public class ZenDeskUserService {
         return zenDeskUsers;
     }
 
-    private List<ZenDeskUser> getZenDeskUsers() {
-        log.debug("Getting all ZendDesk users");
-        ZenDeskUsersResponse zenDeskUsersResponse = webClient.get()
+    private List<User> getZenDeskUsers() {
+        log.debug("Getting all ZenDesk users");
+        UsersResponse usersResponse = webClient.get()
                 .uri("users.json")
                 .retrieve()
-                .bodyToMono(ZenDeskUsersResponse.class)
+                .bodyToMono(UsersResponse.class)
                 .onErrorResume(response -> {
                     if (response instanceof WebClientResponseException) {
                         log.info("\t> Body: {}", ((WebClientResponseException) response).getResponseBodyAsString());
@@ -117,15 +117,17 @@ public class ZenDeskUserService {
                     return Mono.error(response);
                 })
                 .block();
-        return zenDeskUsersResponse.getUsers();
+        return usersResponse.getUsers();
     }
 
-    private ZenDeskUser contactToZenDeskUser(Contact contact) {
-        return ZenDeskUser.builder()
+    private User contactToZenDeskUser(Contact contact) {
+        return User.builder()
                 .details(getDetails(contact))
                 .email(contact.getMail())
-                .name(String.format("%s %s", contact.getFirstName(), contact.getLastName()))
+                .name(getFullname(contact))
                 .verified(true)
+                .signature(getSignature(contact))
+                .notes("Brukeren vedlikeholdes automatisk gjennom kundeportalen.")
                 .phone(contact.getMobile()).build();
     }
 
@@ -133,22 +135,33 @@ public class ZenDeskUserService {
         StringBuilder stringBuilder = new StringBuilder();
 
         if (contact.getLegal().size() > 0) {
-            stringBuilder.append("Juridisk kontaktperson for:\n\n");
+            stringBuilder.append("Juridisk kontaktperson for:\n");
             contact.getLegal().forEach(dn -> {
                 Optional<Organisation> organisation = organisationService.getOrganisationByDn(dn);
-                organisation.ifPresent(o -> stringBuilder.append("- ").append(o.getDisplayName()).append("\n"));
+                organisation.ifPresent(o -> stringBuilder.append("* ").append(o.getDisplayName()).append("\n"));
             });
             stringBuilder.append("\n\n");
         }
 
         if (contact.getTechnical().size() > 0) {
-            stringBuilder.append("Teknisk kontaktperson for:\n\n");
+            stringBuilder.append("Teknisk kontaktperson for:\n");
             contact.getTechnical().forEach(dn -> {
                 Optional<Organisation> organisation = organisationService.getOrganisationByDn(dn);
-                organisation.ifPresent(o -> stringBuilder.append("- ").append(o.getDisplayName()).append("\n"));
+                organisation.ifPresent(o -> stringBuilder.append("* ").append(o.getDisplayName()).append("\n"));
             });
         }
 
         return stringBuilder.toString();
+    }
+
+    private String getSignature(Contact contact) {
+        return String.format("Med vennlig hilsen\n%s %s",
+                contact.getFirstName(),
+                contact.getLastName()
+        );
+    }
+
+    private String getFullname(Contact contact) {
+        return String.format("%s %s", contact.getFirstName(), contact.getLastName());
     }
 }
