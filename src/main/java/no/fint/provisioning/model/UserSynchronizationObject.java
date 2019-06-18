@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Data
 @RequiredArgsConstructor
-public class Container implements Serializable {
+public class UserSynchronizationObject implements Serializable {
 
     private final Contact contact;
     private final AtomicInteger attempts = new AtomicInteger();

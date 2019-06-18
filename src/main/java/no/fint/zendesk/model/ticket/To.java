@@ -1,5 +1,10 @@
 package no.fint.zendesk.model.ticket;
 
-public class To{
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class To {
 
 }

@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TicketResponse {
     private Ticket ticket;
-    private Audit audit;
+    //private Audit audit;
 }

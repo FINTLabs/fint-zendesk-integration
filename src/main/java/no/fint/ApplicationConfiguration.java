@@ -1,7 +1,8 @@
 package no.fint;
 
 import lombok.extern.slf4j.Slf4j;
-import no.fint.provisioning.model.Container;
+import no.fint.provisioning.model.TicketSynchronizationObject;
+import no.fint.provisioning.model.UserSynchronizationObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,12 +41,17 @@ public class ApplicationConfiguration {
     }
 
     @Bean
-    public BlockingQueue<Container> userSynchronizeQueue() {
+    public BlockingQueue<UserSynchronizationObject> userSynchronizeQueue() {
         return new LinkedBlockingQueue<>();
     }
 
     @Bean
     public BlockingQueue<String> userDeleteQueue() {
+        return new LinkedBlockingQueue<>();
+    }
+
+    @Bean
+    public BlockingQueue<TicketSynchronizationObject> ticketQueue() {
         return new LinkedBlockingQueue<>();
     }
 

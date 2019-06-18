@@ -2,7 +2,7 @@ package no.fint.provisioning;
 
 
 import lombok.extern.slf4j.Slf4j;
-import no.fint.provisioning.model.Container;
+import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.ZenDeskUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,21 +15,21 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
-public class UserSyncronizingService {
+public class UserSynchronizingService {
 
     @Autowired
     private ZenDeskUserService zenDeskUserService;
 
 
     @Autowired
-    private BlockingQueue<Container> userSynchronizeQueue;
+    private BlockingQueue<UserSynchronizationObject> userSynchronizeQueue;
 
     @Autowired
     private BlockingQueue<String> userDeleteQueue;
 
-    @Scheduled(fixedRateString = "${fint.zendesk.prov.sync.rate:4000}")
+    @Scheduled(fixedRateString = "${fint.zendesk.user.sync.rate:4000}")
     private void synchronize() throws InterruptedException {
-        Container contact = userSynchronizeQueue.poll(1, TimeUnit.SECONDS);
+        UserSynchronizationObject contact = userSynchronizeQueue.poll(1, TimeUnit.SECONDS);
 
         if (contact == null) return;
 
@@ -46,12 +46,12 @@ public class UserSyncronizingService {
             }
         } catch (WebClientResponseException e) {
             log.debug("Adding contact back in queue for retry.");
-            userSynchronizeQueue.add(contact);
+            userSynchronizeQueue.put(contact);
         }
-        log.debug("{} contacts in queue", userSynchronizeQueue.size());
+        log.debug("{} contacts in synchronize queue", userSynchronizeQueue.size());
     }
 
-    @Scheduled(fixedRateString = "${fint.zendesk.prov.delete.rate:600000}")
+    @Scheduled(fixedRateString = "${fint.zendesk.user.delete.rate:600000}")
     private void clean() throws InterruptedException {
 
         String id = userDeleteQueue.poll(1, TimeUnit.SECONDS);

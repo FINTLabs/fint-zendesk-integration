@@ -34,6 +34,8 @@ dependencies {
     compile('no.fint:fint-cache:0-SNAPSHOT') {
         exclude group: 'no.fint'
     }
+    compile("com.github.springfox.loader:springfox-loader:2.0.0")
+
 
     compileOnly 'org.projectlombok:lombok'
 

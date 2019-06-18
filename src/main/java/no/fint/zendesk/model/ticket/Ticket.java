@@ -1,41 +1,64 @@
 package no.fint.zendesk.model.ticket;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
-public class Ticket{
-	private String subject;
-	private List<Object> emailCcIds;
-	private String createdAt;
-	private String description;
-	private Object externalId;
-	private Object type;
-	private Via via;
-	private boolean allowAttachments;
-	private String updatedAt;
-	private Object problemId;
-	private List<Object> followerIds;
-	private Object dueAt;
-	private int id;
-	private Object assigneeId;
-	private String rawSubject;
-	private Object forumTopicId;
-	private List<CustomFieldsItem> customFields;
-	private boolean allowChannelback;
-	private Object satisfactionRating;
-	private long submitterId;
-	private String priority;
-	private List<Object> collaboratorIds;
-	private String url;
-	private List<String> tags;
-	private long brandId;
-	private List<Object> sharingAgreementIds;
-	private long groupId;
-	private Object organizationId;
-	private List<Object> followupIds;
-	private Object recipient;
-	private boolean isPublic;
-	private boolean hasIncidents;
-	private List<FieldsItem> fields;
-	private String status;
-	private long requesterId;
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Ticket {
+    @NotNull
+    private String subject;
+
+    @NotNull
+    private String type;
+    @NotNull
+    private long submitterId;
+
+    @NotNull
+    private String priority;
+
+    @NotNull
+    private List<String> tags;
+
+    @NotNull
+    private long requesterId;
+
+    @NotNull
+    private Comment comment;
+
+    private String createdAt;
+    private String description;
+    private long id;
+    private long assigneeId;
+    private String url;
+    private String status;
+
+    //private List<FieldsItem> fields;
+    //private List<CustomFieldsItem> customFields;
+    //private List<Long> emailCcIds;
+    //private String externalId;
+    //private Via via;
+    //private boolean allowAttachments;
+    //private String updatedAt;
+    //private long problemId;
+    //private List<Long> followerIds;
+    //private Object dueAt;
+    //private String rawSubject;
+    //private Object forumTopicId;
+    //private boolean allowChannelback;
+    //private Object satisfactionRating;
+    //private List<Object> collaboratorIds;
+    //private long brandId;
+    //private List<Object> sharingAgreementIds;
+    //private long groupId;
+    //private Object organizationId;
+    //private List<Object> followupIds;
+    //private Object recipient;
+    //private boolean isPublic;
+    //private boolean hasIncidents;
 }

@@ -1,3 +1,7 @@
 spring:
   jackson:
     default-property-inclusion: non_null
+    property-naming-strategy: SNAKE_CASE
+springfox:
+  title: ZenDesk Sync
+  version: 1.0.0

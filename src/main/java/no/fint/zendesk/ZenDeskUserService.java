@@ -5,7 +5,7 @@ import no.fint.portal.model.contact.Contact;
 import no.fint.portal.model.contact.ContactService;
 import no.fint.portal.model.organisation.Organisation;
 import no.fint.portal.model.organisation.OrganisationService;
-import no.fint.provisioning.model.Container;
+import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.model.user.ZenDeskUser;
 import no.fint.zendesk.model.user.ZenDeskUserRequest;
 import no.fint.zendesk.model.user.ZenDeskUserResponse;
@@ -33,10 +33,10 @@ public class ZenDeskUserService {
     @Autowired
     private WebClient webClient;
 
-    public void createZenDeskUsers(Container container) {
-        Contact contact = container.getContact();
+    public void createZenDeskUsers(UserSynchronizationObject userSynchronizationObject) {
+        Contact contact = userSynchronizationObject.getContact();
         log.debug("Creating contact {}", contact.getNin());
-        log.debug("Attempt: {}", container.getAttempts());
+        log.debug("Attempt: {}", userSynchronizationObject.getAttempts());
 
         webClient.post()
                 .uri("users")
@@ -57,10 +57,10 @@ public class ZenDeskUserService {
 
     }
 
-    public void updateZenDeskUser(Container container) {
-        Contact contact = container.getContact();
+    public void updateZenDeskUser(UserSynchronizationObject userSynchronizationObject) {
+        Contact contact = userSynchronizationObject.getContact();
         log.debug("Updating contact {}", contact.getNin());
-        log.debug("Attempt: {}", container.getAttempts());
+        log.debug("Attempt: {}", userSynchronizationObject.getAttempts());
 
         webClient.put()
                 .uri(String.format("users/%s.json", contact.getSupportId()))
@@ -94,12 +94,18 @@ public class ZenDeskUserService {
 
     public List<String> getOrphantUsers() {
         List<String> contacts = contactService.getContacts().stream().map(Contact::getSupportId).collect(Collectors.toList());
-        List<String> zenDeskUsers = getZenDeskUsers().stream().map(z -> Long.toString(z.getId())).collect(Collectors.toList());
+        List<String> zenDeskUsers = null;
+        try {
+            zenDeskUsers = getZenDeskUsers().stream().map(z -> Long.toString(z.getId())).collect(Collectors.toList());
+        } catch (WebClientResponseException e) {
+            log.debug("Unable to get all ZenDesk users at the moment. Darn license \\xF0\\x9F\\x99\\x8A");
+        }
         zenDeskUsers.removeAll(contacts);
         return zenDeskUsers;
     }
 
     private List<ZenDeskUser> getZenDeskUsers() {
+        log.debug("Getting all ZendDesk users");
         ZenDeskUsersResponse zenDeskUsersResponse = webClient.get()
                 .uri("users.json")
                 .retrieve()
@@ -119,6 +125,7 @@ public class ZenDeskUserService {
                 .details(getDetails(contact))
                 .email(contact.getMail())
                 .name(String.format("%s %s", contact.getFirstName(), contact.getLastName()))
+                .verified(true)
                 .phone(contact.getMobile()).build();
     }
 
