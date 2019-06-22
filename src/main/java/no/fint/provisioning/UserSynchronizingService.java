@@ -43,7 +43,7 @@ public class UserSynchronizingService {
         }
 
         try {
-            if (StringUtils.isEmpty(contact.getContact().getSupportId())) {
+            if (contactHasZenDeskUser(contact)) {
                 zenDeskUserService.createZenDeskUsers(contact);
             } else {
                 zenDeskUserService.updateZenDeskUser(contact);
@@ -53,6 +53,10 @@ public class UserSynchronizingService {
             userSynchronizeQueue.put(contact);
         }
         log.debug("{} contacts in synchronize queue", userSynchronizeQueue.size());
+    }
+
+    private boolean contactHasZenDeskUser(UserSynchronizationObject contact) {
+        return StringUtils.isEmpty(contact.getContact().getSupportId());
     }
 
     @Scheduled(fixedRateString = "${fint.zendesk.user.delete.rate:600000}")
