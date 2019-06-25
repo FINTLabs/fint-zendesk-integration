@@ -21,7 +21,7 @@ public class TicketQueuingService {
         try {
             ticketQueue.put(new TicketSynchronizationObject(ticket));
         } catch (InterruptedException e) {
-            log.error("Unable to put ticket on queue");
+            log.error("Unable to put ticket on queue", e);
         }
     }
 }

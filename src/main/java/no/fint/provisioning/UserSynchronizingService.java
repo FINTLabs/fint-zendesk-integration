@@ -49,7 +49,7 @@ public class UserSynchronizingService {
                 zenDeskUserService.updateZenDeskUser(contact);
             }
         } catch (WebClientResponseException e) {
-            log.debug("Adding contact back in queue for retry.");
+            log.debug("Adding contact back in queue for retry.", e);
             userSynchronizeQueue.put(contact);
         }
         log.debug("{} contacts in synchronize queue", userSynchronizeQueue.size());
@@ -69,7 +69,7 @@ public class UserSynchronizingService {
         try {
             zenDeskUserService.deleteZenDeskUser(id);
         } catch (WebClientResponseException e) {
-            log.error("Unable to delete user {}", id);
+            log.error("Unable to delete user " + id, e);
         }
     }
 

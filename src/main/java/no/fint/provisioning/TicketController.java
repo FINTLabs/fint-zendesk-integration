@@ -5,7 +5,6 @@ import no.fint.zendesk.model.ticket.Ticket;
 import no.fint.zendesk.model.ticket.TicketPriority;
 import no.fint.zendesk.model.ticket.TicketType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +22,7 @@ public class TicketController {
     @PostMapping()
     public ResponseEntity createTicket(@RequestBody @Valid Ticket ticket) {
         ticketQueuingService.put(ticket);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.ok().build(); // TODO should this return 201 CREATED?
     }
 
     // TODO: 2019-06-18 Get the codes from the ZenDesk api

@@ -42,6 +42,7 @@ dependencies {
 
     annotationProcessor 'org.projectlombok:lombok'
 
+    testImplementation('no.fint:fint-test-utils:0.0.4')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation('org.spockframework:spock-spring:1.2-groovy-2.5')
