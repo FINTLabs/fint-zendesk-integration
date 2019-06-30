@@ -38,7 +38,7 @@ public class TicketSynchronizingService {
         try {
             zenDeskTicketService.createTicket(ticket);
         } catch (Exception e) {
-            log.debug("Adding ticket back in queue for retry.");
+            log.debug("Adding ticket back in queue for retry.", e);
             ticketQueue.put(ticket);
         }
 
