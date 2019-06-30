@@ -3,4 +3,4 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-rootProject.name = 'fint-zendesk-user-sync'
+rootProject.name = 'fint-zendesk-integration'
