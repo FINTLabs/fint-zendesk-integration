@@ -14,13 +14,14 @@ import java.util.Arrays;
 
 @Slf4j
 @RestController
+@CrossOrigin
 @RequestMapping("tickets")
 public class TicketController {
 
     @Autowired
     private TicketQueuingService ticketQueuingService;
 
-    @PostMapping()
+    @PostMapping
     public ResponseEntity createTicket(@RequestBody @Valid Ticket ticket) {
         ticketQueuingService.put(ticket);
         return ResponseEntity.status(HttpStatus.OK).build();
