@@ -3,7 +3,6 @@ package no.fint.provisioning;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.provisioning.model.TicketSynchronizationObject;
-import no.fint.zendesk.model.ticket.Ticket;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +16,9 @@ public class TicketQueuingService {
     @Autowired
     private BlockingQueue<TicketSynchronizationObject> ticketQueue;
 
-    public void put(Ticket ticket) {
+    public void put(TicketSynchronizationObject ticket) {
         try {
-            ticketQueue.put(new TicketSynchronizationObject(ticket));
+            ticketQueue.put(ticket);
         } catch (InterruptedException e) {
             log.error("Unable to put ticket on queue", e);
         }
