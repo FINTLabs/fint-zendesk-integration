@@ -16,7 +16,7 @@ class TicketControllerSpec extends MockMvcSpecification {
     private TicketQueuingService ticketQueuingService = Mock()
 
     void setup() {
-        controller = new TicketController(ticketQueuingService: ticketQueuingService)
+        controller = new TicketController(ticketQueuingService: ticketQueuingService, statusCache: Mock(StatusCache))
         mockMvc = standaloneSetup(controller)
     }
 
@@ -30,10 +30,6 @@ class TicketControllerSpec extends MockMvcSpecification {
                 .andExpect(jsonPathEquals('$[0].value', 'question'))
                 .andExpect(jsonPathEquals('$[1].name', 'Hendelse'))
                 .andExpect(jsonPathEquals('$[1].value', 'incident'))
-                .andExpect(jsonPathEquals('$[2].name', 'Problem'))
-                .andExpect(jsonPathEquals('$[2].value', 'problem'))
-                .andExpect(jsonPathEquals('$[3].name', 'Oppgave'))
-                .andExpect(jsonPathEquals('$[3].value', 'task'))
     }
 
     def "Post ticket"() {
@@ -49,7 +45,7 @@ class TicketControllerSpec extends MockMvcSpecification {
 
         then:
         1 * ticketQueuingService.put(_)
-        response.andExpect(status().isOk())
+        response.andExpect(status().isAccepted())
     }
 
     def "Get ticket priority"() {
@@ -60,10 +56,12 @@ class TicketControllerSpec extends MockMvcSpecification {
         response.andExpect(status().isOk())
                 .andExpect(jsonPathEquals('$[0].name', 'Lav'))
                 .andExpect(jsonPathEquals('$[0].value', 'low'))
-                .andExpect(jsonPathEquals('$[1].name', 'Høy'))
-                .andExpect(jsonPathEquals('$[1].value', 'high'))
-                .andExpect(jsonPathEquals('$[2].name', 'Haster'))
-                .andExpect(jsonPathEquals('$[2].value', 'urgent'))
+                .andExpect(jsonPathEquals('$[1].name', 'Normal'))
+                .andExpect(jsonPathEquals('$[1].value', 'normal'))
+                .andExpect(jsonPathEquals('$[2].name', 'Høy'))
+                .andExpect(jsonPathEquals('$[2].value', 'high'))
+                .andExpect(jsonPathEquals('$[3].name', 'Haster'))
+                .andExpect(jsonPathEquals('$[3].value', 'urgent'))
     }
 
     def "Get queue size"() {

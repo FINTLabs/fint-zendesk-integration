@@ -1,6 +1,7 @@
 package no.fint.provisioning
 
 import no.fint.ApplicationConfiguration
+import no.fint.provisioning.model.TicketSynchronizationObject
 import no.fint.zendesk.model.ticket.Ticket
 import spock.lang.Specification
 
@@ -13,7 +14,7 @@ class TicketQueuingServiceSpec extends Specification {
     def "When adding a object to queue the queue size increases by one"() {
 
         when:
-        ticketQueuingService.put(new Ticket())
+        ticketQueuingService.put(new TicketSynchronizationObject())
 
         then:
         ticketQueuingService.ticketQueue.size() == 1

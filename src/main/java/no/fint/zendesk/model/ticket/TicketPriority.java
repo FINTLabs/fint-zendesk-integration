@@ -8,4 +8,5 @@ import lombok.Data;
 public class TicketPriority {
     private String name;
     private String value;
+    private String help;
 }

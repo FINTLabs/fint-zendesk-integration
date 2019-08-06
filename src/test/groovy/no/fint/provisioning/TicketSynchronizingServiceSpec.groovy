@@ -19,7 +19,8 @@ class TicketSynchronizingServiceSpec extends Specification {
     private def ticketSynchronizingService = new TicketSynchronizingService(
             ticketQueue: ticketQueue,
             configuration: configuration,
-            zenDeskTicketService: zenDeskTicketService
+            zenDeskTicketService: zenDeskTicketService,
+            statusCache: Mock(StatusCache)
     )
 
     def "When the sync queue is empty nothing happens"() {
