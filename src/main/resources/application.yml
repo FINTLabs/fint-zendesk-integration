@@ -7,3 +7,67 @@ server:
 springfox:
   title: ZenDesk Sync
   version: 1.0.0
+fint:
+  zendesk:
+    ticket-priorities:
+      - name: Lav
+        value: low
+        help: >
+          Velg prioritet ut i fra følgende kriterier:
+          <ul>  <li>Mindre feil eller \kosmetiske\ problemer.</li>
+          <li>Feil påvirker arbeidet, men sluttbruker kan fortsette sitt arbeid med noe redusert ytelse.</li>
+          <li>Liten eller ingen økonomisk skadevirkning</li>
+          </ul>
+          <p>Responstid innen 5 virkedager.</p>
+      - name: Normal
+        value: normal
+        help: >
+          Velg prioritet ut i fra følgende kriterier:
+          <ul>
+          <li>En sluttbruker får ikke utført sine arbeidsfunksjoner.</li>
+          <li>Liten økonomisk skadevirkning.</li>
+          </ul>
+          <p>Responstid innen 10 timer.</p>
+      - name: Høy
+        value: high
+        help: >
+          Velg prioritet ut i fra følgende kriterier:
+          <ul>
+          <li>Flere brukere får ikke utført sine arbeidsfunksjoner.</li>
+          <li>En viss økonomisk skadevirkning.</li>
+          </ul>
+          NB! Det forventes at dere er tilgjengelige frem til saken er løst og har mulighet
+           til å bistå oss med hjelp og informasjon.
+          <p>Responstid innen 4 timer.</p>
+      - name: Haster
+        value: urgent
+        help: >
+          Velg prioritet ut i fra følgende kriterier:
+          <ul>
+          <li>Utfall av en eller flere lokasjoner/tjenester.</li>
+          <li>Ingen brukere får utført sine arbeidsfunksjoner.</li>
+          <li>Store økonomiske tap.</li>
+          <li>Alvorlig konsekvens for omdømme.</li>
+          </ul>
+          NB! Det forventes at dere er tilgjengelige frem til saken er løst og har mulighet
+           til å bistå oss med hjelp og informasjon.
+          <p>Responstid innen 60 minutter.</p>
+    ticket-types:
+      - name: Spørsmål
+        value: question
+        help: Velg denne om du lurer på noe eller trenger råd. Dette er det samme som Service Request i ITIL.
+      - name: Hendelse
+        value: incident
+        help: Velg denne om det er en ikke planlagt forstyrrelse/feil på en tjeneste. Dette er det samme som Incident i ITIL.
+    ticket-category:
+      - name: Qlik
+        options:
+          - description: Qlik Sense
+            dn: DNQLIK_SENSE
+            basePath: QLIK_SENSE.COM
+          - description: Qlikview
+            dn: DNQLIKWIEW
+            basePath: QLIKWIEW.COM
+      - name: Hub
+      - name: NPrinting
+      - name: Analyse

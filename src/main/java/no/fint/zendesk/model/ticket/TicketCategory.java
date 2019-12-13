@@ -5,12 +5,13 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TicketType {
+public class TicketCategory {
     private String name;
-    private String value;
-    private String help;
+    private List<TicketCategoryOption> options;
 }

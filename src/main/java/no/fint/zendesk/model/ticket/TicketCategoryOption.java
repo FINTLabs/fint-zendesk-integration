@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TicketType {
-    private String name;
-    private String value;
-    private String help;
+public class TicketCategoryOption {
+    private String description;
+    private String dn;
+    private String basePath;
 }
