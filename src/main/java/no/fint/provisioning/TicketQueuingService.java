@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.provisioning.model.TicketSynchronizationObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.BlockingQueue;
@@ -11,6 +12,7 @@ import java.util.concurrent.BlockingQueue;
 @Slf4j
 @Getter
 @Service
+@ConditionalOnProperty("fint.zendesk.tickets.enabled")
 public class TicketQueuingService {
 
     @Autowired
