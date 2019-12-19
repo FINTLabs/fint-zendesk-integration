@@ -40,6 +40,7 @@ public class UserQueuingService {
     private void init() {
         contactCache = new FintCache<>();
         lastUpdated = 0;
+        log.info("FINT Zendesk user service enabled.");
     }
 
     @Scheduled(initialDelayString = "${fint.zendesk.prov.user.queuing.initial-delay:10000}", fixedDelayString = "${fint.zendesk.prov.user.queuing.delay:60000}")
