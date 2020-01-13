@@ -7,14 +7,17 @@ import no.fint.provisioning.model.TicketSynchronizationObject;
 import no.fint.zendesk.ZenDeskTicketService;
 import no.fint.zendesk.model.ticket.Ticket;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
+@ConditionalOnProperty("fint.zendesk.tickets.enabled")
 public class TicketSynchronizingService {
 
     @Autowired
@@ -28,6 +31,11 @@ public class TicketSynchronizingService {
 
     @Autowired
     private StatusCache statusCache;
+
+    @PostConstruct
+    public void init() {
+        log.info("FINT Zendesk ticket service enabled.");
+    }
 
     @Scheduled(fixedRateString = "${fint.zendesk.ticket.sync.rate:5000}")
     private void synchronize() throws InterruptedException {

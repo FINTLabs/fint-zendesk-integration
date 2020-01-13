@@ -71,3 +71,7 @@ fint:
       - name: Hub
       - name: NPrinting
       - name: Analyse
+    users:
+      enabled: true
+    tickets:
+      enabled: true

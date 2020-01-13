@@ -7,6 +7,7 @@ import no.fint.portal.model.contact.ContactService;
 import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.ZenDeskUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@ConditionalOnProperty("fint.zendesk.users.enabled")
 public class UserQueuingService {
 
     @Autowired
@@ -38,6 +40,7 @@ public class UserQueuingService {
     private void init() {
         contactCache = new FintCache<>();
         lastUpdated = 0;
+        log.info("FINT Zendesk user service enabled.");
     }
 
     @Scheduled(initialDelayString = "${fint.zendesk.prov.user.queuing.initial-delay:10000}", fixedDelayString = "${fint.zendesk.prov.user.queuing.delay:60000}")
