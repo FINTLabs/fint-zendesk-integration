@@ -1,21 +1,21 @@
 package no.fint.provisioning;
 
 import lombok.extern.slf4j.Slf4j;
+import no.fint.ZenDeskProps;
+import no.fint.provisioning.model.RequestStatus;
+import no.fint.provisioning.model.RequestSynchronizationObject;
 import no.fint.provisioning.model.TicketStatus;
 import no.fint.provisioning.model.TicketSynchronizationObject;
 import no.fint.zendesk.model.ticket.Ticket;
-import no.fint.zendesk.model.ticket.TicketPriority;
-import no.fint.zendesk.model.ticket.TicketType;
+import no.fint.zendesk.model.ticket.vigo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.Arrays;
 
 @Slf4j
 @RestController
@@ -29,6 +29,15 @@ public class TicketController {
     @Autowired
     private StatusCache statusCache;
 
+    @Autowired
+    private RequestStatusCache requestStatusCache;
+
+    @Autowired
+    private ZenDeskProps zenDeskProps;
+
+    @Autowired
+    private RequestQueuingService requestQueuingService;
+
     @PostMapping
     public ResponseEntity createTicket(@RequestBody @Valid Ticket ticket, HttpServletRequest request) {
         TicketSynchronizationObject ticketSynchronizationObject = new TicketSynchronizationObject(ticket);
@@ -41,6 +50,22 @@ public class TicketController {
         URI location = UriComponentsBuilder.fromUriString(request.getRequestURL().toString())
                 .path("/status/{id}")
                 .buildAndExpand(ticketSynchronizationObject.getUuid())
+                .toUri();
+        return ResponseEntity.status(HttpStatus.ACCEPTED).location(location).build();
+    }
+
+    @PostMapping("/vigo-ticket")
+    public ResponseEntity createVigoTicket(@RequestBody VigoTicket ticket, HttpServletRequest request) {
+        RequestSynchronizationObject requestSynchronizationObject = new RequestSynchronizationObject(ticket);
+        requestQueuingService.put(requestSynchronizationObject);
+        Ticket emptyTicket = new Ticket();
+
+        RequestStatus requestStatus = RequestStatus.builder().status(RequestStatus.Status.RUNNING).request(emptyTicket).build();
+        requestStatusCache.put(requestSynchronizationObject.getUuid(), requestStatus);
+
+        URI location = UriComponentsBuilder.fromUriString(request.getRequestURL().toString().replace("tickets/vigo-ticket", "tickets/"))
+                .path("/request-status/{requestid}")
+                .buildAndExpand(requestSynchronizationObject.getUuid())
                 .toUri();
         return ResponseEntity.status(HttpStatus.ACCEPTED).location(location).build();
     }
@@ -68,79 +93,44 @@ public class TicketController {
 
     }
 
+    @GetMapping("/request-status/{requestid}")
+    public ResponseEntity getRequestStatus(@PathVariable String requestid) {
+
+        log.debug("/request-status/{}", requestid);
+
+        if (!requestStatusCache.containsKey(requestid)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        RequestStatus requestStatus = requestStatusCache.get(requestid);
+
+        if (requestStatus.getStatus() == RequestStatus.Status.RUNNING) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (requestStatus.getStatus() == RequestStatus.Status.ERROR) {
+            return ResponseEntity.unprocessableEntity().build();
+        }
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(requestStatus.getRequest());
+    }
+
     // TODO: 2019-06-18 Get the codes from the ZenDesk api
     @GetMapping("type")
     public ResponseEntity getTicketTypes() {
-        return ResponseEntity.ok(
-                Arrays.asList(
-                        TicketType.builder()
-                                .name("Spørsmål")
-                                .value("question")
-                                .help("Velg denne om du lurer på noe eller trenger råd. Dette er det samme som Service Request i ITIL.")
-                                .build(),
-                        TicketType.builder()
-                                .name("Hendelse")
-                                .value("incident")
-                                .help("Velg denne om det er en ikke planlagt forstyrrelse/feil på en tjeneste. Dette er det samme som Incident i ITIL.")
-                                .build()
-                )
-        );
+        return ResponseEntity.ok(zenDeskProps.getTicketTypes());
     }
 
     // TODO: 2019-06-18 Get the codes from the ZenDesk api
     @GetMapping("priority")
     public ResponseEntity getTicketPriority() {
-        return ResponseEntity.ok(
-                Arrays.asList(
-                        TicketPriority.builder()
-                                .name("Lav")
-                                .value("low")
-                                .help("Velg prioritet ut i fra følgende kriterier:" +
-                                        "<ul>" +
-                                        "<li>Mindre feil eller \"kosmetiske\" problemer.</li>" +
-                                        "<li>Feil påvirker arbeidet, men sluttbruker kan fortsette sitt arbeid med noe redusert ytelse.</li>" +
-                                        "<li>Liten eller ingen økonomisk skadevirkning</li>" +
-                                        "</ul>" +
-                                        "<p>Responstid innen 5 virkedager.</p>")
-                                .build(),
-                        TicketPriority.builder()
-                                .name("Normal")
-                                .value("normal")
-                                .help("Velg prioritet ut i fra følgende kriterier:" +
-                                        "<ul>" +
-                                        "<li>En sluttbruker får ikke utført sine arbeidsfunksjoner.</li>" +
-                                        "<li>Liten økonomisk skadevirkning.</li>" +
-                                        "</ul>" +
-                                        "<p>Responstid innen 10 timer.</p>")
-                                .build(),
-                        TicketPriority.builder()
-                                .name("Høy")
-                                .value("high")
-                                .help("Velg prioritet ut i fra følgende kriterier:" +
-                                        "<ul>" +
-                                        "<li>Flere brukere får ikke utført sine arbeidsfunksjoner.</li>" +
-                                        "<li>En viss økonomisk skadevirkning.</li>" +
-                                        "</ul>" +
-                                        "NB! Det forventes at dere er tilgjengelige frem til saken er løst og har mulighet" +
-                                        " til å bistå oss med hjelp og informasjon."+
-                                        "<p>Responstid innen 4 timer.</p>")
-                                .build(),
-                        TicketPriority.builder()
-                                .name("Haster")
-                                .value("urgent")
-                                .help("Velg prioritet ut i fra følgende kriterier:" +
-                                        "<ul>" +
-                                        "<li>Utfall av en eller flere lokasjoner/tjenester.</li>" +
-                                        "<li>Ingen brukere får utført sine arbeidsfunksjoner.</li>" +
-                                        "<li>Store økonomiske tap.</li>" +
-                                        "<li>Alvorlig konsekvens for omdømme.</li>" +
-                                        "</ul>" +
-                                        "NB! Det forventes at dere er tilgjengelige frem til saken er løst og har mulighet" +
-                                        " til å bistå oss med hjelp og informasjon." +
-                                        "<p>Responstid innen 60 minutter.</p>")
-                                .build()
-                )
-        );
+        return ResponseEntity.ok(zenDeskProps.getTicketPriorities());
+    }
+
+    // TODO: 2019-06-18 Get the codes from the ZenDesk api
+    @GetMapping("category")
+    public ResponseEntity getTicketCategory() {
+        return ResponseEntity.ok(zenDeskProps.getTicketCategory());
     }
 
     @GetMapping("queue/count")

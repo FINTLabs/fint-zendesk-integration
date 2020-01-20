@@ -9,7 +9,6 @@ import no.fint.zendesk.ZenDeskUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
 import javax.annotation.PostConstruct;
 import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;

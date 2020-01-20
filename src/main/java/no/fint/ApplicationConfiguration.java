@@ -2,6 +2,7 @@ package no.fint;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import no.fint.provisioning.model.RequestSynchronizationObject;
 import no.fint.provisioning.model.TicketSynchronizationObject;
 import no.fint.provisioning.model.UserSynchronizationObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +14,6 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -61,6 +61,11 @@ public class ApplicationConfiguration {
 
     @Bean
     public BlockingQueue<TicketSynchronizationObject> ticketQueue() {
+        return new LinkedBlockingQueue<>();
+    }
+
+    @Bean
+    public BlockingQueue<RequestSynchronizationObject> requestQueue() {
         return new LinkedBlockingQueue<>();
     }
 
