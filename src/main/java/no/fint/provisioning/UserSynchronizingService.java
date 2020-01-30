@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import no.fint.ApplicationConfiguration;
 import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.ZenDeskUserService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -22,8 +22,7 @@ public class UserSynchronizingService {
 
     @Autowired
     private ApplicationConfiguration configuration;
-
-
+    
     @Autowired
     private BlockingQueue<UserSynchronizationObject> userSynchronizeQueue;
 
@@ -43,9 +42,9 @@ public class UserSynchronizingService {
 
         try {
             if (contactHasZenDeskUser(contact)) {
-                zenDeskUserService.createZenDeskUsers(contact);
-            } else {
                 zenDeskUserService.updateZenDeskUser(contact);
+            } else {
+                zenDeskUserService.createZenDeskUsers(contact);
             }
         } catch (WebClientResponseException e) {
             log.debug("Adding contact back in queue for retry.", e);
@@ -55,7 +54,7 @@ public class UserSynchronizingService {
     }
 
     private boolean contactHasZenDeskUser(UserSynchronizationObject contact) {
-        return StringUtils.isEmpty(contact.getContact().getSupportId());
+        return StringUtils.isNotBlank(contact.getContact().getSupportId());
     }
 
     @Scheduled(fixedRateString = "${fint.zendesk.user.delete.rate:600000}")
