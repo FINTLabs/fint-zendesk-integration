@@ -31,7 +31,7 @@ public class ZenDeskProps {
     @Data
     public static class TicketCategory {
         private String name;
-        private List<TicketCategoryOption> options;
+        private String help;
     }
 
     @Data
