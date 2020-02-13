@@ -10,6 +10,7 @@ import no.fint.zendesk.model.user.User;
 import no.fint.zendesk.model.user.UserRequest;
 import no.fint.zendesk.model.user.UserResponse;
 import no.fint.zendesk.model.user.UsersResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -76,6 +77,25 @@ public class ZenDeskUserService {
                 .block();
     }
 
+    public UserResponse createOrUpdateZenDeskUser(UserSynchronizationObject userSynchronizationObject) {
+        Contact contact = userSynchronizationObject.getContact();
+        log.debug("Updating contact {}", contact.getNin());
+        log.debug("\tAttempt: {}", userSynchronizationObject.getAttempts());
+
+        return webClient.post()
+                .uri("users/create_or_update.json")
+                .syncBody(new UserRequest(contactToZenDeskUser(contact)))
+                .retrieve()
+                .bodyToMono(UserResponse.class)
+                .onErrorResume(response -> {
+                    if (response instanceof WebClientResponseException) {
+                        log.info("\t> Body: {}", ((WebClientResponseException) response).getResponseBodyAsString());
+                    }
+                    return Mono.error(response);
+                })
+                .block();
+    }
+
     public void deleteZenDeskUser(String id) {
         log.debug("Deleting user {}", id);
 
@@ -121,14 +141,29 @@ public class ZenDeskUserService {
     }
 
     private User contactToZenDeskUser(Contact contact) {
-        return User.builder()
+        User user = User.builder()
+                .externalId("fint_" + maskNin(contact.getNin()))
                 .details(getDetails(contact))
                 .email(contact.getMail())
                 .name(getFullname(contact))
+                .role(getRole(contact.getMail()))
                 .verified(true)
                 .signature(getSignature(contact))
                 .notes("Brukeren vedlikeholdes automatisk gjennom kundeportalen.")
                 .phone(contact.getMobile()).build();
+        log.debug("User: {}", user);
+        return user;
+    }
+
+    private String getRole(String mail) {
+        if (StringUtils.endsWithAny(mail, "@fintlabs.no", "@vigodrift.no")) {
+            return "admin";
+        }
+        return "end-user";
+    }
+
+    private String maskNin(String nin) {
+        return Long.toString((Long.parseLong(nin) / 100), 36);
     }
 
     private String getDetails(Contact contact) {

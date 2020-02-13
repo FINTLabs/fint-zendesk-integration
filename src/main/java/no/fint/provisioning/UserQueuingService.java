@@ -53,7 +53,7 @@ public class UserQueuingService {
         contactCache.getSince(lastUpdated).forEach(this::putOnSynchronizeQueue);
         lastUpdated = contactCache.getLastUpdated();
 
-        zenDeskUserService.getOrphantUsers().forEach(this::putOnDeleteQueue);
+        //zenDeskUserService.getOrphantUsers().forEach(this::putOnDeleteQueue);
 
     }
 

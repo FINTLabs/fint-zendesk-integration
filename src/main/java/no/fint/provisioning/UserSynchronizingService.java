@@ -3,8 +3,11 @@ package no.fint.provisioning;
 
 import lombok.extern.slf4j.Slf4j;
 import no.fint.ApplicationConfiguration;
+import no.fint.portal.model.contact.Contact;
 import no.fint.provisioning.model.UserSynchronizationObject;
+import no.fint.zendesk.RateLimiter;
 import no.fint.zendesk.ZenDeskUserService;
+import no.fint.zendesk.model.user.UserResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,41 +26,49 @@ public class UserSynchronizingService {
 
     @Autowired
     private ApplicationConfiguration configuration;
-    
+
     @Autowired
     private BlockingQueue<UserSynchronizationObject> userSynchronizeQueue;
 
     @Autowired
     private BlockingQueue<String> userDeleteQueue;
 
+    @Autowired
+    private RateLimiter rateLimiter;
+
     @Scheduled(fixedRateString = "${fint.zendesk.user.sync.rate:60000}")
     private void synchronize() throws InterruptedException {
-        UserSynchronizationObject contact = userSynchronizeQueue.poll(1, TimeUnit.SECONDS);
+        log.info("Starting user sync with {} pending updates...", userSynchronizeQueue.size());
+        do {
+            UserSynchronizationObject update = userSynchronizeQueue.poll(10, TimeUnit.SECONDS);
 
-        if (contact == null) return;
+            if (update == null) continue;
+            Contact contact = update.getContact();
 
-        // TODO This is a workaround for this service dropping privileges to user!
-        if (StringUtils.endsWithAny(contact.getContact().getMail(), "@fintlabs.no", "@vigodrift.no")) {
-            log.error("Not updating contact with email {} - user might be agent or admin!!", contact.getContact().getMail());
-            return;
-        }
+            if (update.getAttempts().incrementAndGet() > configuration.getUserSyncMaxRetryAttempts()) {
+                log.debug("Unable to synchronize contact {} after 10 retries.", contact.getNin());
+                continue;
+            }
 
-        if (contact.getAttempts().incrementAndGet() > configuration.getUserSyncMaxRetryAttempts()) {
-            log.debug("Unable to synchronize contact {} after 10 retries.", contact.getContact().getNin());
-            return;
-        }
-
-        try {
+            try {
+                UserResponse userResponse = zenDeskUserService.createOrUpdateZenDeskUser(update);
+                log.info("Remaining: {}", rateLimiter.getRemaining());
+                log.info("User ID: {}", userResponse.getUser().getId());
+                TimeUnit.SECONDS.sleep(1);
+            /*
             if (contactHasZenDeskUser(contact)) {
                 zenDeskUserService.updateZenDeskUser(contact);
             } else {
                 zenDeskUserService.createZenDeskUsers(contact);
             }
-        } catch (WebClientResponseException e) {
-            log.debug("Adding contact back in queue for retry.", e);
-            userSynchronizeQueue.put(contact);
-        }
-        log.debug("{} contacts in synchronize queue", userSynchronizeQueue.size());
+             */
+            } catch (WebClientResponseException e) {
+                log.debug("Adding contact back in queue for retry.", e);
+                userSynchronizeQueue.put(update);
+                break;
+            }
+        } while (rateLimiter.getRemaining() > 1);
+        log.info("Pending contacts: {}", userSynchronizeQueue.size());
     }
 
     private boolean contactHasZenDeskUser(UserSynchronizationObject contact) {
