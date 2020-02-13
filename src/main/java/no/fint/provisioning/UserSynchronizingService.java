@@ -36,6 +36,12 @@ public class UserSynchronizingService {
 
         if (contact == null) return;
 
+        // TODO This is a workaround for this service dropping privileges to user!
+        if (StringUtils.endsWithAny(contact.getContact().getMail(), "@fintlabs.no", "@vigodrift.no")) {
+            log.error("Not updating contact with email {} - user might be agent or admin!!", contact.getContact().getMail());
+            return;
+        }
+
         if (contact.getAttempts().incrementAndGet() > configuration.getUserSyncMaxRetryAttempts()) {
             log.debug("Unable to synchronize contact {} after 10 retries.", contact.getContact().getNin());
             return;
