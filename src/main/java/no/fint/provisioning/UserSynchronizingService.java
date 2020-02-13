@@ -36,7 +36,7 @@ public class UserSynchronizingService {
     @Autowired
     private RateLimiter rateLimiter;
 
-    @Scheduled(fixedRateString = "${fint.zendesk.user.sync.rate:60000}")
+    @Scheduled(fixedDelayString = "${fint.zendesk.user.sync.rate:60000}")
     private void synchronize() throws InterruptedException {
         log.info("Starting user sync with {} pending updates...", userSynchronizeQueue.size());
         do {
@@ -75,7 +75,7 @@ public class UserSynchronizingService {
         return StringUtils.isNotBlank(contact.getContact().getSupportId());
     }
 
-    @Scheduled(fixedRateString = "${fint.zendesk.user.delete.rate:600000}")
+    @Scheduled(fixedDelayString = "${fint.zendesk.user.delete.rate:600000}")
     private void clean() throws InterruptedException {
 
         String id = userDeleteQueue.poll(1, TimeUnit.SECONDS);

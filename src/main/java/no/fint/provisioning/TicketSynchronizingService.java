@@ -41,7 +41,7 @@ public class TicketSynchronizingService {
         log.info("FINT Zendesk ticket service enabled.");
     }
 
-    @Scheduled(fixedRateString = "${fint.zendesk.ticket.sync.rate:60000}")
+    @Scheduled(fixedDelayString = "${fint.zendesk.ticket.sync.rate:60000}")
     private void synchronize() throws InterruptedException {
         log.info("Starting ticket synchronization with {} pending tickets..", ticketQueue.size());
         do {
