@@ -53,6 +53,7 @@ public class UserQueuingService {
         contactCache.getSince(lastUpdated).forEach(this::putOnSynchronizeQueue);
         lastUpdated = contactCache.getLastUpdated();
 
+        // TODO Refactor service to detect users to be deleted
         //zenDeskUserService.getOrphantUsers().forEach(this::putOnDeleteQueue);
 
     }

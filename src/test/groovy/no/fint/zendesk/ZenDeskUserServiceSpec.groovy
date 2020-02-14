@@ -35,10 +35,9 @@ class ZenDeskUserServiceSpec extends Specification {
         )
 
         when:
-        zenDeskUserService.createZenDeskUsers(userSynchronizationObject)
+        zenDeskUserService.createOrUpdateZenDeskUser(userSynchronizationObject)
 
         then:
-        contact.supportId != null
         noExceptionThrown()
     }
 
@@ -47,29 +46,7 @@ class ZenDeskUserServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.UNPROCESSABLE_ENTITY.value()))
 
         when:
-        zenDeskUserService.createZenDeskUsers(userSynchronizationObject)
-
-        then:
-        thrown(WebClientResponseException)
-    }
-
-    def "When updating an existing user no exceptions is thrown"() {
-        given:
-        server.enqueue(new MockResponse().setResponseCode(HttpStatus.OK.value()))
-
-        when:
-        zenDeskUserService.updateZenDeskUser(new UserSynchronizationObject(contact))
-
-        then:
-        noExceptionThrown()
-    }
-
-    def "When updating a non existing user an exceptions is thrown"() {
-        given:
-        server.enqueue(new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value()))
-
-        when:
-        zenDeskUserService.updateZenDeskUser(new UserSynchronizationObject(contact))
+        zenDeskUserService.createOrUpdateZenDeskUser(userSynchronizationObject)
 
         then:
         thrown(WebClientResponseException)

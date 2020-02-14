@@ -42,7 +42,7 @@ public class UserSynchronizingService {
         do {
             UserSynchronizationObject update = userSynchronizeQueue.poll(10, TimeUnit.SECONDS);
 
-            if (update == null) continue;
+            if (update == null) break;
             Contact contact = update.getContact();
 
             if (update.getAttempts().incrementAndGet() > configuration.getUserSyncMaxRetryAttempts()) {
@@ -55,13 +55,6 @@ public class UserSynchronizingService {
                 log.info("Remaining: {}", rateLimiter.getRemaining());
                 log.info("User ID: {}", userResponse.getUser().getId());
                 TimeUnit.SECONDS.sleep(1);
-            /*
-            if (contactHasZenDeskUser(contact)) {
-                zenDeskUserService.updateZenDeskUser(contact);
-            } else {
-                zenDeskUserService.createZenDeskUsers(contact);
-            }
-             */
             } catch (WebClientResponseException e) {
                 log.debug("Adding contact back in queue for retry.", e);
                 userSynchronizeQueue.put(update);

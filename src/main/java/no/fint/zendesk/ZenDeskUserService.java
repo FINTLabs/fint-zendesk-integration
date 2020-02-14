@@ -34,49 +34,6 @@ public class ZenDeskUserService {
     @Autowired
     private WebClient webClient;
 
-    public void createZenDeskUsers(UserSynchronizationObject userSynchronizationObject) {
-        Contact contact = userSynchronizationObject.getContact();
-        log.debug("Creating contact {}", contact.getNin());
-        log.debug("\tAttempt: {}", userSynchronizationObject.getAttempts());
-
-        webClient.post()
-                .uri("users")
-                .syncBody(new UserRequest(contactToZenDeskUser(contact)))
-                .retrieve()
-                .bodyToMono(UserResponse.class)
-                .doOnSuccess(response -> {
-                    contact.setSupportId(Long.toString(response.getUser().getId()));
-                    contactService.updateContact(contact);
-                })
-                .onErrorResume(response -> {
-                    if (response instanceof WebClientResponseException) {
-                        log.info("\t> Body: {}", ((WebClientResponseException) response).getResponseBodyAsString());
-                    }
-                    return Mono.error(response);
-                })
-                .block();
-
-    }
-
-    public void updateZenDeskUser(UserSynchronizationObject userSynchronizationObject) {
-        Contact contact = userSynchronizationObject.getContact();
-        log.debug("Updating contact {}", contact.getNin());
-        log.debug("\tAttempt: {}", userSynchronizationObject.getAttempts());
-
-        webClient.put()
-                .uri(String.format("users/%s.json", contact.getSupportId()))
-                .syncBody(new UserRequest(contactToZenDeskUser(contact)))
-                .retrieve()
-                .bodyToMono(UserResponse.class)
-                .onErrorResume(response -> {
-                    if (response instanceof WebClientResponseException) {
-                        log.info("\t> Body: {}", ((WebClientResponseException) response).getResponseBodyAsString());
-                    }
-                    return Mono.error(response);
-                })
-                .block();
-    }
-
     public UserResponse createOrUpdateZenDeskUser(UserSynchronizationObject userSynchronizationObject) {
         Contact contact = userSynchronizationObject.getContact();
         log.debug("Updating contact {}", contact.getNin());
