@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -30,7 +31,7 @@ public class TicketController {
     private StatusCache statusCache;
 
     @PostMapping
-    public ResponseEntity createTicket(@RequestBody @Valid Ticket ticket, HttpServletRequest request) {
+    public ResponseEntity<Void> createTicket(@RequestBody @Valid Ticket ticket, HttpServletRequest request) {
         TicketSynchronizationObject ticketSynchronizationObject = new TicketSynchronizationObject(ticket);
         ticketQueuingService.put(ticketSynchronizationObject);
 
@@ -46,7 +47,7 @@ public class TicketController {
     }
 
     @GetMapping("/status/{id}")
-    public ResponseEntity getStatus(@PathVariable String id) {
+    public ResponseEntity<Ticket> getStatus(@PathVariable String id) {
 
         log.debug("/status/{}", id);
 
@@ -70,7 +71,7 @@ public class TicketController {
 
     // TODO: 2019-06-18 Get the codes from the ZenDesk api
     @GetMapping("type")
-    public ResponseEntity getTicketTypes() {
+    public ResponseEntity<List<TicketType>> getTicketTypes() {
         return ResponseEntity.ok(
                 Arrays.asList(
                         TicketType.builder()
@@ -89,7 +90,7 @@ public class TicketController {
 
     // TODO: 2019-06-18 Get the codes from the ZenDesk api
     @GetMapping("priority")
-    public ResponseEntity getTicketPriority() {
+    public ResponseEntity<List<TicketPriority>> getTicketPriority() {
         return ResponseEntity.ok(
                 Arrays.asList(
                         TicketPriority.builder()
