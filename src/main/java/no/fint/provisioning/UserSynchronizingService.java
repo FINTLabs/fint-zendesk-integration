@@ -8,7 +8,6 @@ import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.RateLimiter;
 import no.fint.zendesk.ZenDeskUserService;
 import no.fint.zendesk.model.user.UserResponse;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -29,9 +28,6 @@ public class UserSynchronizingService {
 
     @Autowired
     private BlockingQueue<UserSynchronizationObject> userSynchronizeQueue;
-
-    @Autowired
-    private BlockingQueue<String> userDeleteQueue;
 
     @Autowired
     private RateLimiter rateLimiter;
@@ -63,24 +59,5 @@ public class UserSynchronizingService {
         } while (rateLimiter.getRemaining() > 1);
         log.info("Pending contacts: {}", userSynchronizeQueue.size());
     }
-
-    private boolean contactHasZenDeskUser(UserSynchronizationObject contact) {
-        return StringUtils.isNotBlank(contact.getContact().getSupportId());
-    }
-
-    @Scheduled(fixedDelayString = "${fint.zendesk.user.delete.rate:600000}")
-    private void clean() throws InterruptedException {
-
-        String id = userDeleteQueue.poll(1, TimeUnit.SECONDS);
-
-        if (id == null) return;
-
-        try {
-            zenDeskUserService.deleteZenDeskUser(id);
-        } catch (WebClientResponseException e) {
-            log.error("Unable to delete user " + id, e);
-        }
-    }
-
 
 }

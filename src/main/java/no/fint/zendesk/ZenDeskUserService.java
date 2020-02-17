@@ -9,7 +9,6 @@ import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.model.user.User;
 import no.fint.zendesk.model.user.UserRequest;
 import no.fint.zendesk.model.user.UserResponse;
-import no.fint.zendesk.model.user.UsersResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,9 +16,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -67,34 +64,6 @@ public class ZenDeskUserService {
                     return Mono.error(response);
                 })
                 .block();
-    }
-
-    public List<String> getOrphantUsers() {
-        List<String> contacts = contactService.getContacts().stream().map(Contact::getSupportId).collect(Collectors.toList());
-        List<String> zenDeskUsers = null;
-        try {
-            zenDeskUsers = getZenDeskUsers().stream().map(z -> Long.toString(z.getId())).collect(Collectors.toList());
-        } catch (WebClientResponseException e) {
-            log.debug("Unable to get all ZenDesk users at the moment. Darn license \\xF0\\x9F\\x99\\x8A");
-        }
-        zenDeskUsers.removeAll(contacts);
-        return zenDeskUsers;
-    }
-
-    private List<User> getZenDeskUsers() {
-        log.debug("Getting all ZenDesk users");
-        UsersResponse usersResponse = webClient.get()
-                .uri("users.json")
-                .retrieve()
-                .bodyToMono(UsersResponse.class)
-                .onErrorResume(response -> {
-                    if (response instanceof WebClientResponseException) {
-                        log.info("\t> Body: {}", ((WebClientResponseException) response).getResponseBodyAsString());
-                    }
-                    return Mono.error(response);
-                })
-                .block();
-        return usersResponse.getUsers();
     }
 
     private User contactToZenDeskUser(Contact contact) {

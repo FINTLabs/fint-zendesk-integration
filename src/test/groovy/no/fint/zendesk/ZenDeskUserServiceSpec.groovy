@@ -74,40 +74,6 @@ class ZenDeskUserServiceSpec extends Specification {
         thrown(WebClientResponseException)
     }
 
-    def "Get users returns a list"() {
-        given:
-        server.enqueue(new MockResponse()
-                .setResponseCode(HttpStatus.CREATED.value())
-                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(new ClassPathResource("getUsersResponse.json").getFile().text)
-        )
-
-        when:
-        def users = zenDeskUserService.getZenDeskUsers()
-
-        then:
-        noExceptionThrown()
-        users.size() == 2
-
-    }
-
-    def "Get orphant users return a list of 1"() {
-        given:
-        server.enqueue(new MockResponse()
-                .setResponseCode(HttpStatus.CREATED.value())
-                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(new ClassPathResource("getUsersResponse.json").getFile().text)
-        )
-
-        when:
-        def users = zenDeskUserService.getOrphantUsers()
-
-        then:
-        contactService.getContacts() >> Arrays.asList(new Contact(supportId: "360687970239"))
-        users.size() == 1
-
-    }
-
     def "Contact 2 ZenDesk user"() {
 
         when:

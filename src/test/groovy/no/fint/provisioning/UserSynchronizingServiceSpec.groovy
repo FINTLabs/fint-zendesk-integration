@@ -19,7 +19,6 @@ class UserSynchronizingServiceSpec extends Specification {
     private def zenDeskUserService = Mock(ZenDeskUserService)
     private def configuration = new ApplicationConfiguration(ticketSyncMaxRetryAttempts: 10, userSyncMaxRetryAttempts: 10)
     private def userSynchronizeQueue = Mock(BlockingQueue)
-    private def userDeleteQueue = Mock(BlockingQueue)
     private def rateLimiter = Mock(RateLimiter) {
         _ * getRemaining() >> 0
     }
@@ -27,7 +26,6 @@ class UserSynchronizingServiceSpec extends Specification {
             zenDeskUserService: zenDeskUserService,
             configuration: configuration,
             userSynchronizeQueue: userSynchronizeQueue,
-            userDeleteQueue: userDeleteQueue,
             rateLimiter: rateLimiter
     )
 
