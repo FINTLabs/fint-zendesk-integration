@@ -20,6 +20,7 @@ public class User {
     private String email;
     private boolean verified;
     private String phone;
+    private String externalId;
 
     //private boolean shared;
     //private String lastLoginAt;
@@ -28,7 +29,6 @@ public class User {
     //private String customRoleId;
     //private boolean moderator;
     //private String createdAt;
-    //private String externalId;
     //private String locale;
     //private long defaultGroupId;
     //private int localeId;

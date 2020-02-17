@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 @CrossOrigin
 @RequestMapping("users")
 @Slf4j
-public class ContactController {
+public class UsersController {
 
     @Autowired
     private BlockingQueue<UserSynchronizationObject> userSynchronizeQueue;
@@ -24,7 +24,19 @@ public class ContactController {
     @PostMapping
     public ResponseEntity<Void> updateContact(@RequestBody @Valid Contact contact) {
         try {
-            if (userSynchronizeQueue.offer(new UserSynchronizationObject(contact), 1, TimeUnit.SECONDS)) {
+            if (userSynchronizeQueue.offer(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.UPDATE), 1, TimeUnit.SECONDS)) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.unprocessableEntity().build();
+        } catch (InterruptedException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteContact(@RequestBody @Valid Contact contact) {
+        try {
+            if (userSynchronizeQueue.offer(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.DELETE), 1, TimeUnit.SECONDS)) {
                 return ResponseEntity.noContent().build();
             }
             return ResponseEntity.unprocessableEntity().build();

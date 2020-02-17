@@ -23,7 +23,7 @@ public class UserSynchronizingService {
 
     @Autowired
     private ApplicationConfiguration configuration;
-    
+
     @Autowired
     private BlockingQueue<UserSynchronizationObject> userSynchronizeQueue;
 
@@ -48,7 +48,9 @@ public class UserSynchronizingService {
         }
 
         try {
-            if (contactHasZenDeskUser(contact)) {
+            if (contact.getOperation() == UserSynchronizationObject.Operation.DELETE) {
+                zenDeskUserService.deleteZenDeskUser(contact);
+            } else if (contactHasZenDeskUser(contact)) {
                 zenDeskUserService.updateZenDeskUser(contact);
             } else {
                 zenDeskUserService.createZenDeskUsers(contact);
@@ -62,20 +64,6 @@ public class UserSynchronizingService {
 
     private boolean contactHasZenDeskUser(UserSynchronizationObject contact) {
         return StringUtils.isNotBlank(contact.getContact().getSupportId());
-    }
-
-    @Scheduled(fixedRateString = "${fint.zendesk.user.delete.rate:600000}")
-    private void clean() throws InterruptedException {
-
-        String id = userDeleteQueue.poll(1, TimeUnit.SECONDS);
-
-        if (id == null) return;
-
-        try {
-            zenDeskUserService.deleteZenDeskUser(id);
-        } catch (WebClientResponseException e) {
-            log.error("Unable to delete user " + id, e);
-        }
     }
 
 

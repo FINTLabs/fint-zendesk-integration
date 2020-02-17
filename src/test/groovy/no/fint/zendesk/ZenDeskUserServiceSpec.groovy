@@ -24,7 +24,7 @@ class ZenDeskUserServiceSpec extends Specification {
             organisationService: organisationService,
             contactService: contactService)
     private def contact = new Contact(nin: 12345678987, firstName: "Ola", lastName: "Olsen", mobile: "99999999", mail: "ola@olsen.net")
-    private def userSynchronizationObject = new UserSynchronizationObject(contact)
+    private def userSynchronizationObject = new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.UPDATE)
 
     def "When creating a user no exceptions is thrown"() {
         given:
@@ -58,7 +58,7 @@ class ZenDeskUserServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.OK.value()))
 
         when:
-        zenDeskUserService.updateZenDeskUser(new UserSynchronizationObject(contact))
+        zenDeskUserService.updateZenDeskUser(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.UPDATE))
 
         then:
         noExceptionThrown()
@@ -69,7 +69,7 @@ class ZenDeskUserServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value()))
 
         when:
-        zenDeskUserService.updateZenDeskUser(new UserSynchronizationObject(contact))
+        zenDeskUserService.updateZenDeskUser(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.UPDATE))
 
         then:
         thrown(WebClientResponseException)
@@ -80,7 +80,7 @@ class ZenDeskUserServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.OK.value()))
 
         when:
-        zenDeskUserService.deleteZenDeskUser("123")
+        zenDeskUserService.deleteZenDeskUser(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.DELETE))
 
         then:
         noExceptionThrown()
@@ -91,7 +91,7 @@ class ZenDeskUserServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value()))
 
         when:
-        zenDeskUserService.deleteZenDeskUser("123")
+        zenDeskUserService.deleteZenDeskUser(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.DELETE))
 
         then:
         thrown(WebClientResponseException)

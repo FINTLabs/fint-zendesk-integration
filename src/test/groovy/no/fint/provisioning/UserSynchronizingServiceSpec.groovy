@@ -32,7 +32,7 @@ class UserSynchronizingServiceSpec extends Specification {
 
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
-                new UserSynchronizationObject(new Contact(supportId: "123"))
+                new UserSynchronizationObject(new Contact(supportId: "123"), UserSynchronizationObject.Operation.UPDATE)
         1 * zenDeskUserService.updateZenDeskUser(_ as UserSynchronizationObject)
     }
 
@@ -42,13 +42,13 @@ class UserSynchronizingServiceSpec extends Specification {
 
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
-                new UserSynchronizationObject(new Contact())
+                new UserSynchronizationObject(new Contact(), UserSynchronizationObject.Operation.UPDATE)
         1 * zenDeskUserService.createZenDeskUsers(_ as UserSynchronizationObject)
     }
 
     def "If max retries is excised nothing is done"() {
         given:
-        def userSynchronizationObject = new UserSynchronizationObject(new Contact(supportId: "123"))
+        def userSynchronizationObject = new UserSynchronizationObject(new Contact(supportId: "123"), UserSynchronizationObject.Operation.UPDATE)
         userSynchronizationObject.attempts.addAndGet(10)
 
         when:
@@ -68,7 +68,7 @@ class UserSynchronizingServiceSpec extends Specification {
 
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
-                new UserSynchronizationObject(new Contact())
+                new UserSynchronizationObject(new Contact(), UserSynchronizationObject.Operation.UPDATE)
         zenDeskUserService.createZenDeskUsers(_ as UserSynchronizationObject) >> {
             throw WebClientResponseException.create(HttpStatus.TOO_MANY_REQUESTS.value(), null, null, null, null)
         }
@@ -88,4 +88,17 @@ class UserSynchronizingServiceSpec extends Specification {
         0 * zenDeskUserService.createZenDeskUsers(_ as UserSynchronizationObject)
         0 * userSynchronizeQueue.put(_ as UserSynchronizationObject)
     }
+
+    def 'Perform deletion if operation is DELETE'() {
+
+        when:
+        userSynchronizingService.synchronize()
+
+        then:
+        userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
+                new UserSynchronizationObject(new Contact(supportId: "123"), UserSynchronizationObject.Operation.DELETE)
+        0 * zenDeskUserService.updateZenDeskUser(_ as UserSynchronizationObject)
+        1 * zenDeskUserService.deleteZenDeskUser(_ as UserSynchronizationObject)
+    }
+
 }

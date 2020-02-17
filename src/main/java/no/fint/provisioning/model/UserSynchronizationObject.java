@@ -12,5 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class UserSynchronizationObject implements Serializable {
 
     private final Contact contact;
+    private final Operation operation;
     private final AtomicInteger attempts = new AtomicInteger();
+
+    public enum Operation { UPDATE, DELETE }
 }

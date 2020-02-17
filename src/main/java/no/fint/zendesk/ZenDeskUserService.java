@@ -16,6 +16,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -76,11 +77,11 @@ public class ZenDeskUserService {
                 .block();
     }
 
-    public void deleteZenDeskUser(String id) {
-        log.debug("Deleting user {}", id);
-
+    public void deleteZenDeskUser(UserSynchronizationObject contact) {
+        log.debug("Deleting user {}", contact);
+        User user = contactToZenDeskUser(contact.getContact());
         webClient.delete()
-                .uri(String.format("users/%s.json", id))
+                .uri("users/destroy_many.json", Collections.singletonMap("external_ids", user.getExternalId()))
                 .retrieve()
                 .bodyToMono(UserResponse.class)
                 .onErrorResume(response -> {

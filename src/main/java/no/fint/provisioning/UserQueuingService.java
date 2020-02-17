@@ -47,7 +47,7 @@ public class UserQueuingService {
     public void queue() {
         contactCache.update(contactService.getContacts()
                 .stream()
-                .map(UserSynchronizationObject::new)
+                .map(c -> new UserSynchronizationObject(c, UserSynchronizationObject.Operation.UPDATE))
                 .collect(Collectors.toList()));
         log.info("{} contacts needs to be queued for synchronization.", contactCache.getSince(lastUpdated).count());
         contactCache.getSince(lastUpdated).forEach(this::putOnSynchronizeQueue);
