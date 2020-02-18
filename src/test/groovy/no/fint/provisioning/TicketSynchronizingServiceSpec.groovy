@@ -2,6 +2,7 @@ package no.fint.provisioning
 
 import no.fint.ApplicationConfiguration
 import no.fint.provisioning.model.TicketSynchronizationObject
+import no.fint.zendesk.RateLimiter
 import no.fint.zendesk.ZenDeskTicketService
 import no.fint.zendesk.model.ticket.Ticket
 import org.springframework.http.HttpStatus
@@ -16,11 +17,15 @@ class TicketSynchronizingServiceSpec extends Specification {
     private def ticketQueue = Mock(BlockingQueue)
     private def configuration = new ApplicationConfiguration(ticketSyncMaxRetryAttempts: 10)
     private def zenDeskTicketService = Mock(ZenDeskTicketService)
+    private def rateLimiter = Mock(RateLimiter) {
+        _ * getRemaining() >> 0
+    }
     private def ticketSynchronizingService = new TicketSynchronizingService(
             ticketQueue: ticketQueue,
             configuration: configuration,
             zenDeskTicketService: zenDeskTicketService,
-            statusCache: Mock(StatusCache)
+            statusCache: Mock(StatusCache),
+            rateLimiter: rateLimiter
     )
 
     def "When the sync queue is empty nothing happens"() {
