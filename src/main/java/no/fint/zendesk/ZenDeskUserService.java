@@ -2,7 +2,6 @@ package no.fint.zendesk;
 
 import lombok.extern.slf4j.Slf4j;
 import no.fint.portal.model.contact.Contact;
-import no.fint.portal.model.contact.ContactService;
 import no.fint.portal.model.organisation.Organisation;
 import no.fint.portal.model.organisation.OrganisationService;
 import no.fint.provisioning.model.UserSynchronizationObject;
@@ -24,9 +23,6 @@ public class ZenDeskUserService {
 
     @Autowired
     private OrganisationService organisationService;
-
-    @Autowired
-    private ContactService contactService;
 
     @Autowired
     private WebClient webClient;

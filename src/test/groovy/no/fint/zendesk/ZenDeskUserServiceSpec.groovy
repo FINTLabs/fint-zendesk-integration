@@ -1,7 +1,6 @@
 package no.fint.zendesk
 
 import no.fint.portal.model.contact.Contact
-import no.fint.portal.model.contact.ContactService
 import no.fint.portal.model.organisation.OrganisationService
 import no.fint.provisioning.model.UserSynchronizationObject
 import okhttp3.mockwebserver.MockResponse
@@ -18,11 +17,9 @@ class ZenDeskUserServiceSpec extends Specification {
 
     private def server = new MockWebServer()
     private def organisationService = Mock(OrganisationService)
-    private def contactService = Mock(ContactService)
     private def zenDeskUserService = new ZenDeskUserService(
             webClient: WebClient.create(server.url('/').toString()),
-            organisationService: organisationService,
-            contactService: contactService)
+            organisationService: organisationService)
     private def contact = new Contact(nin: 12345678987, firstName: "Ola", lastName: "Olsen", mobile: "99999999", mail: "ola@olsen.net")
     private def userSynchronizationObject = new UserSynchronizationObject(contact)
 
