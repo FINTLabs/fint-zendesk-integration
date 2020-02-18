@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -22,9 +21,10 @@ public class UsersController {
     private BlockingQueue<UserSynchronizationObject> userSynchronizeQueue;
 
     @PostMapping
-    public ResponseEntity<Void> updateContact(@RequestBody @Valid Contact contact) {
+    public ResponseEntity<Void> updateContact(@RequestBody Contact contact) {
         try {
             if (userSynchronizeQueue.offer(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.UPDATE), 1, TimeUnit.SECONDS)) {
+                log.info("Updating Contact {}", contact);
                 return ResponseEntity.noContent().build();
             }
             return ResponseEntity.unprocessableEntity().build();
@@ -34,9 +34,10 @@ public class UsersController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteContact(@RequestBody @Valid Contact contact) {
+    public ResponseEntity<Void> deleteContact(@RequestBody Contact contact) {
         try {
             if (userSynchronizeQueue.offer(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.DELETE), 1, TimeUnit.SECONDS)) {
+                log.info("Deleting Contact {}", contact);
                 return ResponseEntity.noContent().build();
             }
             return ResponseEntity.unprocessableEntity().build();
