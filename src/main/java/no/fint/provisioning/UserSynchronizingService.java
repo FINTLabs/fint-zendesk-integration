@@ -42,7 +42,7 @@ public class UserSynchronizingService {
             Contact contact = update.getContact();
 
             if (update.getAttempts().incrementAndGet() > configuration.getUserSyncMaxRetryAttempts()) {
-                log.debug("Unable to synchronize contact {} after 10 retries.", contact.getNin());
+                log.debug("Unable to synchronize contact {} after {} retries.", contact.getNin(), configuration.getUserSyncMaxRetryAttempts());
                 continue;
             }
 

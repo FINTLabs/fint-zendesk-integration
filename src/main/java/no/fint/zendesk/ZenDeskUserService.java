@@ -14,7 +14,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
 import java.util.Optional;
 
 @Slf4j
@@ -48,7 +47,7 @@ public class ZenDeskUserService {
         log.debug("Deleting user {}", contact);
         User user = contactToZenDeskUser(contact);
         webClient.delete()
-                .uri("users/destroy_many.json", Collections.singletonMap("external_ids", user.getExternalId()))
+                .uri("users/destroy_many.json?external_ids={external_ids}", user.getExternalId())
                 .retrieve()
                 .bodyToMono(Void.class)
                 .onErrorResume(response -> {
