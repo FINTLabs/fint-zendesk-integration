@@ -1,6 +1,5 @@
 package no.fint.zendesk;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.provisioning.model.TicketSynchronizationObject;
 import no.fint.zendesk.model.ticket.Ticket;

@@ -5,7 +5,6 @@ import no.fint.cache.FintCache;
 import no.fint.cache.model.CacheObject;
 import no.fint.portal.model.contact.ContactService;
 import no.fint.provisioning.model.UserSynchronizationObject;
-import no.fint.zendesk.ZenDeskUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,13 +23,7 @@ public class UserQueuingService {
     private ContactService contactService;
 
     @Autowired
-    private ZenDeskUserService zenDeskUserService;
-
-    @Autowired
     private BlockingQueue<UserSynchronizationObject> userSynchronizeQueue;
-
-    @Autowired
-    private BlockingQueue<String> userDeleteQueue;
 
     private FintCache<UserSynchronizationObject> contactCache;
     private long lastUpdated;
@@ -52,9 +45,6 @@ public class UserQueuingService {
         log.info("{} contacts needs to be queued for synchronization.", contactCache.getSince(lastUpdated).count());
         contactCache.getSince(lastUpdated).forEach(this::putOnSynchronizeQueue);
         lastUpdated = contactCache.getLastUpdated();
-
-        zenDeskUserService.getOrphantUsers().forEach(this::putOnDeleteQueue);
-
     }
 
 
@@ -68,15 +58,4 @@ public class UserQueuingService {
         }
     }
 
-    private void putOnDeleteQueue(String id) {
-        try {
-            if (!userDeleteQueue.contains(id)) {
-                userDeleteQueue.put(id);
-                log.debug("New contact added to delete queue");
-                log.debug("{} contacts in delete queue", userDeleteQueue.size());
-            }
-        } catch (InterruptedException e) {
-            log.error("Unable to put contact to delete queue: {}", e.getMessage());
-        }
-    }
 }

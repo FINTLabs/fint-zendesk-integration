@@ -1,7 +1,6 @@
 package no.fint.zendesk
 
 import no.fint.portal.model.contact.Contact
-import no.fint.portal.model.contact.ContactService
 import no.fint.portal.model.organisation.OrganisationService
 import no.fint.provisioning.model.UserSynchronizationObject
 import okhttp3.mockwebserver.MockResponse
@@ -18,11 +17,9 @@ class ZenDeskUserServiceSpec extends Specification {
 
     private def server = new MockWebServer()
     private def organisationService = Mock(OrganisationService)
-    private def contactService = Mock(ContactService)
     private def zenDeskUserService = new ZenDeskUserService(
             webClient: WebClient.create(server.url('/').toString()),
-            organisationService: organisationService,
-            contactService: contactService)
+            organisationService: organisationService)
     private def contact = new Contact(nin: 12345678987, firstName: "Ola", lastName: "Olsen", mobile: "99999999", mail: "ola@olsen.net")
     private def userSynchronizationObject = new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.UPDATE)
 
@@ -35,10 +32,9 @@ class ZenDeskUserServiceSpec extends Specification {
         )
 
         when:
-        zenDeskUserService.createZenDeskUsers(userSynchronizationObject)
+        zenDeskUserService.createOrUpdateZenDeskUser(userSynchronizationObject)
 
         then:
-        contact.supportId != null
         noExceptionThrown()
     }
 
@@ -47,29 +43,7 @@ class ZenDeskUserServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.UNPROCESSABLE_ENTITY.value()))
 
         when:
-        zenDeskUserService.createZenDeskUsers(userSynchronizationObject)
-
-        then:
-        thrown(WebClientResponseException)
-    }
-
-    def "When updating an existing user no exceptions is thrown"() {
-        given:
-        server.enqueue(new MockResponse().setResponseCode(HttpStatus.OK.value()))
-
-        when:
-        zenDeskUserService.updateZenDeskUser(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.UPDATE))
-
-        then:
-        noExceptionThrown()
-    }
-
-    def "When updating a non existing user an exceptions is thrown"() {
-        given:
-        server.enqueue(new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value()))
-
-        when:
-        zenDeskUserService.updateZenDeskUser(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.UPDATE))
+        zenDeskUserService.createOrUpdateZenDeskUser(userSynchronizationObject)
 
         then:
         thrown(WebClientResponseException)
@@ -95,40 +69,6 @@ class ZenDeskUserServiceSpec extends Specification {
 
         then:
         thrown(WebClientResponseException)
-    }
-
-    def "Get users returns a list"() {
-        given:
-        server.enqueue(new MockResponse()
-                .setResponseCode(HttpStatus.CREATED.value())
-                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(new ClassPathResource("getUsersResponse.json").getFile().text)
-        )
-
-        when:
-        def users = zenDeskUserService.getZenDeskUsers()
-
-        then:
-        noExceptionThrown()
-        users.size() == 2
-
-    }
-
-    def "Get orphant users return a list of 1"() {
-        given:
-        server.enqueue(new MockResponse()
-                .setResponseCode(HttpStatus.CREATED.value())
-                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody(new ClassPathResource("getUsersResponse.json").getFile().text)
-        )
-
-        when:
-        def users = zenDeskUserService.getOrphantUsers()
-
-        then:
-        contactService.getContacts() >> Arrays.asList(new Contact(supportId: "360687970239"))
-        users.size() == 1
-
     }
 
     def "Contact 2 ZenDesk user"() {

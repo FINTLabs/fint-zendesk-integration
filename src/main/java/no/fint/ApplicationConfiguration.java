@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.provisioning.model.TicketSynchronizationObject;
 import no.fint.provisioning.model.UserSynchronizationObject;
+import no.fint.zendesk.RateLimiter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,11 +40,12 @@ public class ApplicationConfiguration {
     private int ticketSyncMaxRetryAttempts;
 
     @Bean
-    public WebClient webClient() {
+    public WebClient webClient(RateLimiter rateLimiter) {
         return WebClient.builder()
                 .baseUrl(zenDeskBaseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .filter(ExchangeFilterFunctions.basicAuthentication(username, token))
+                .filter(rateLimiter.rateLimiter())
                 .filter(logRequest())
                 .filter(logResponse())
                 .build();
@@ -63,7 +65,6 @@ public class ApplicationConfiguration {
     public BlockingQueue<TicketSynchronizationObject> ticketQueue() {
         return new LinkedBlockingQueue<>();
     }
-
 
     private ExchangeFilterFunction logResponse() {
         return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {

@@ -16,15 +16,15 @@ public class User {
     private String notes;
     private String signature;
     private String details;
-    private long id;
+    private Long id;
     private String email;
-    private boolean verified;
+    private Boolean verified;
     private String phone;
     private String externalId;
+    private String role;
 
     //private boolean shared;
     //private String lastLoginAt;
-    //private String role;
     //private boolean sharedAgent;
     //private String customRoleId;
     //private boolean moderator;
