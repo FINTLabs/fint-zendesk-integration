@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import no.fint.portal.model.contact.Contact;
 import no.fint.portal.model.organisation.Organisation;
 import no.fint.portal.model.organisation.OrganisationService;
-import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.model.user.User;
 import no.fint.zendesk.model.user.UserRequest;
 import no.fint.zendesk.model.user.UserResponse;
@@ -16,7 +15,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -29,10 +27,8 @@ public class ZenDeskUserService {
     @Autowired
     private WebClient webClient;
 
-    public UserResponse createOrUpdateZenDeskUser(UserSynchronizationObject userSynchronizationObject) {
-        Contact contact = userSynchronizationObject.getContact();
+    public UserResponse createOrUpdateZenDeskUser(Contact contact) {
         log.debug("Updating contact {}", contact.getNin());
-        log.debug("\tAttempt: {}", userSynchronizationObject.getAttempts());
 
         return webClient.post()
                 .uri("users/create_or_update.json")
@@ -48,13 +44,13 @@ public class ZenDeskUserService {
                 .block();
     }
 
-    public void deleteZenDeskUser(UserSynchronizationObject contact) {
+    public void deleteZenDeskUser(Contact contact) {
         log.debug("Deleting user {}", contact);
-        User user = contactToZenDeskUser(contact.getContact());
+        User user = contactToZenDeskUser(contact);
         webClient.delete()
                 .uri("users/destroy_many.json", Collections.singletonMap("external_ids", user.getExternalId()))
                 .retrieve()
-                .bodyToMono(UserResponse.class)
+                .bodyToMono(Void.class)
                 .onErrorResume(response -> {
                     if (response instanceof WebClientResponseException) {
                         log.info("\t> Body: {}", ((WebClientResponseException) response).getResponseBodyAsString());

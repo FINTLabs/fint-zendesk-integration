@@ -47,10 +47,10 @@ public class UserSynchronizingService {
             }
 
             try {
-                if (contact.getOperation() == UserSynchronizationObject.Operation.DELETE) {
+                if (update.getOperation() == UserSynchronizationObject.Operation.DELETE) {
                     zenDeskUserService.deleteZenDeskUser(contact);
                 } else {
-                    UserResponse userResponse = zenDeskUserService.createOrUpdateZenDeskUser(update);
+                    UserResponse userResponse = zenDeskUserService.createOrUpdateZenDeskUser(contact);
                     log.info("User ID: {}", userResponse.getUser().getId());
                 }
                 log.info("Remaining: {}", rateLimiter.getRemaining());

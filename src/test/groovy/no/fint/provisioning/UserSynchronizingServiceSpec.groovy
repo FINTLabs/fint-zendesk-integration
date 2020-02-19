@@ -38,7 +38,7 @@ class UserSynchronizingServiceSpec extends Specification {
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
                 new UserSynchronizationObject(new Contact(supportId: "123"), UserSynchronizationObject.Operation.UPDATE)
-        1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as UserSynchronizationObject) >> new UserResponse(new User(id: 123))
+        1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> new UserResponse(new User(id: 123))
     }
 
     def "When contact don't have zendesk user create is preformed"() {
@@ -48,7 +48,7 @@ class UserSynchronizingServiceSpec extends Specification {
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
                 new UserSynchronizationObject(new Contact(), UserSynchronizationObject.Operation.UPDATE)
-        1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as UserSynchronizationObject) >> new UserResponse(new User(id: 123))
+        1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> new UserResponse(new User(id: 123))
     }
 
     def "If max retries is excised nothing is done"() {
@@ -73,7 +73,7 @@ class UserSynchronizingServiceSpec extends Specification {
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
                 new UserSynchronizationObject(new Contact(), UserSynchronizationObject.Operation.UPDATE)
-        zenDeskUserService.createOrUpdateZenDeskUser(_ as UserSynchronizationObject) >> {
+        zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> {
             throw WebClientResponseException.create(HttpStatus.TOO_MANY_REQUESTS.value(), null, null, null, null)
         }
         1 * userSynchronizeQueue.put(_ as UserSynchronizationObject)
@@ -88,7 +88,7 @@ class UserSynchronizingServiceSpec extends Specification {
 
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >> null
-        0 * zenDeskUserService.createOrUpdateZenDeskUser(_ as UserSynchronizationObject)
+        0 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact)
         0 * userSynchronizeQueue.put(_ as UserSynchronizationObject)
     }
 
@@ -100,8 +100,8 @@ class UserSynchronizingServiceSpec extends Specification {
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
                 new UserSynchronizationObject(new Contact(supportId: "123"), UserSynchronizationObject.Operation.DELETE)
-        0 * zenDeskUserService.updateZenDeskUser(_ as UserSynchronizationObject)
-        1 * zenDeskUserService.deleteZenDeskUser(_ as UserSynchronizationObject)
+        0 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact)
+        1 * zenDeskUserService.deleteZenDeskUser(_ as Contact)
     }
 
 }

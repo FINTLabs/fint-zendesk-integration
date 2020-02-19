@@ -2,7 +2,6 @@ package no.fint.zendesk
 
 import no.fint.portal.model.contact.Contact
 import no.fint.portal.model.organisation.OrganisationService
-import no.fint.provisioning.model.UserSynchronizationObject
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.springframework.core.io.ClassPathResource
@@ -21,7 +20,6 @@ class ZenDeskUserServiceSpec extends Specification {
             webClient: WebClient.create(server.url('/').toString()),
             organisationService: organisationService)
     private def contact = new Contact(nin: 12345678987, firstName: "Ola", lastName: "Olsen", mobile: "99999999", mail: "ola@olsen.net")
-    private def userSynchronizationObject = new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.UPDATE)
 
     def "When creating a user no exceptions is thrown"() {
         given:
@@ -32,7 +30,7 @@ class ZenDeskUserServiceSpec extends Specification {
         )
 
         when:
-        zenDeskUserService.createOrUpdateZenDeskUser(userSynchronizationObject)
+        zenDeskUserService.createOrUpdateZenDeskUser(contact)
 
         then:
         noExceptionThrown()
@@ -43,7 +41,7 @@ class ZenDeskUserServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.UNPROCESSABLE_ENTITY.value()))
 
         when:
-        zenDeskUserService.createOrUpdateZenDeskUser(userSynchronizationObject)
+        zenDeskUserService.createOrUpdateZenDeskUser(contact)
 
         then:
         thrown(WebClientResponseException)
@@ -54,7 +52,7 @@ class ZenDeskUserServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.OK.value()))
 
         when:
-        zenDeskUserService.deleteZenDeskUser(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.DELETE))
+        zenDeskUserService.deleteZenDeskUser(contact)
 
         then:
         noExceptionThrown()
@@ -65,7 +63,7 @@ class ZenDeskUserServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value()))
 
         when:
-        zenDeskUserService.deleteZenDeskUser(new UserSynchronizationObject(contact, UserSynchronizationObject.Operation.DELETE))
+        zenDeskUserService.deleteZenDeskUser(contact)
 
         then:
         thrown(WebClientResponseException)
