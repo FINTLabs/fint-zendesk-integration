@@ -4,6 +4,7 @@ package no.fint.provisioning;
 import lombok.extern.slf4j.Slf4j;
 import no.fint.ApplicationConfiguration;
 import no.fint.portal.model.contact.Contact;
+import no.fint.portal.model.contact.ContactService;
 import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.RateLimiter;
 import no.fint.zendesk.ZenDeskUserService;
@@ -32,6 +33,9 @@ public class UserSynchronizingService {
     @Autowired
     private RateLimiter rateLimiter;
 
+    @Autowired
+    private ContactService contactService;
+
     @Scheduled(fixedDelayString = "${fint.zendesk.user.sync.rate:60000}")
     private void synchronize() throws InterruptedException {
         log.info("Starting user sync with {} pending updates...", userSynchronizeQueue.size());
@@ -50,6 +54,8 @@ public class UserSynchronizingService {
                 UserResponse userResponse = zenDeskUserService.createOrUpdateZenDeskUser(update);
                 log.info("Remaining: {}", rateLimiter.getRemaining());
                 log.info("User ID: {}", userResponse.getUser().getId());
+                contact.setSupportId(String.valueOf(userResponse.getUser().getId()));
+                contactService.updateContact(contact);
                 TimeUnit.SECONDS.sleep(1);
             } catch (WebClientResponseException e) {
                 log.debug("Adding contact back in queue for retry.", e);

@@ -2,6 +2,7 @@ package no.fint.provisioning
 
 import no.fint.ApplicationConfiguration
 import no.fint.portal.model.contact.Contact
+import no.fint.portal.model.contact.ContactService
 import no.fint.provisioning.model.UserSynchronizationObject
 import no.fint.zendesk.RateLimiter
 import no.fint.zendesk.ZenDeskUserService
@@ -19,11 +20,13 @@ class UserSynchronizingServiceSpec extends Specification {
     private def zenDeskUserService = Mock(ZenDeskUserService)
     private def configuration = new ApplicationConfiguration(ticketSyncMaxRetryAttempts: 10, userSyncMaxRetryAttempts: 10)
     private def userSynchronizeQueue = Mock(BlockingQueue)
+    private def contactService = Mock(ContactService)
     private def rateLimiter = Mock(RateLimiter) {
         _ * getRemaining() >> 0
     }
     private def userSynchronizingService = new UserSynchronizingService(
             zenDeskUserService: zenDeskUserService,
+            contactService: contactService,
             configuration: configuration,
             userSynchronizeQueue: userSynchronizeQueue,
             rateLimiter: rateLimiter
@@ -39,6 +42,7 @@ class UserSynchronizingServiceSpec extends Specification {
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
                 new UserSynchronizationObject(new Contact(supportId: "123"))
         1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as UserSynchronizationObject) >> new UserResponse(new User(id: 123))
+        1 * contactService.updateContact(_ as Contact) >> true
     }
 
     def "When contact don't have zendesk user create is preformed"() {
@@ -49,6 +53,7 @@ class UserSynchronizingServiceSpec extends Specification {
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
                 new UserSynchronizationObject(new Contact())
         1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as UserSynchronizationObject) >> new UserResponse(new User(id: 123))
+        1 * contactService.updateContact(_ as Contact) >> true
     }
 
     def "If max retries is excised nothing is done"() {
