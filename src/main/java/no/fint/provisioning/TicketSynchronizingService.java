@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
@@ -36,16 +37,33 @@ public class TicketSynchronizingService {
     @Autowired
     private RateLimiter rateLimiter;
 
+    private final AtomicBoolean running = new AtomicBoolean();
+
     @PostConstruct
     public void init() {
+        start();
         log.info("FINT Zendesk ticket service enabled.");
     }
 
     @Scheduled(fixedDelayString = "${fint.zendesk.ticket.sync.rate:60000}")
+    public void start() {
+        if (running.compareAndSet(false, true)) {
+            new Thread(() -> {
+                try {
+                    synchronize();
+                } catch (Exception e) {
+                    log.info("Stopping due to: {}", e.getMessage());
+                } finally {
+                    running.set(false);
+                }
+            }, "TicketService").start();
+        }
+    }
+
     private void synchronize() throws InterruptedException {
         log.info("Starting ticket synchronization with {} pending tickets..", ticketQueue.size());
         do {
-            TicketSynchronizationObject ticket = ticketQueue.poll(10, TimeUnit.SECONDS);
+            TicketSynchronizationObject ticket = ticketQueue.poll(1, TimeUnit.MINUTES);
 
             if (ticket == null) continue;
 
