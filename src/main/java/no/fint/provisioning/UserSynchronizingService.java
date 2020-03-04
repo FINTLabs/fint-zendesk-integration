@@ -8,12 +8,12 @@ import no.fint.portal.model.contact.ContactService;
 import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.RateLimiter;
 import no.fint.zendesk.ZenDeskUserService;
-import no.fint.zendesk.model.user.UserResponse;
+import no.fint.zendesk.model.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.time.Duration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -45,21 +45,23 @@ public class UserSynchronizingService {
             if (update == null) break;
             Contact contact = update.getContact();
 
-            if (update.getAttempts().incrementAndGet() > configuration.getUserSyncMaxRetryAttempts()) {
-                log.debug("Unable to synchronize contact {} after 10 retries.", contact.getNin());
-                continue;
-            }
 
             try {
-                UserResponse userResponse = zenDeskUserService.createOrUpdateZenDeskUser(update);
+                User response = zenDeskUserService
+                        .createOrUpdateZenDeskUser(update.getContact())
+                        .block(Duration.ofSeconds(30));
                 log.info("Remaining: {}", rateLimiter.getRemaining());
-                log.info("User ID: {}", userResponse.getUser().getId());
-                contact.setSupportId(String.valueOf(userResponse.getUser().getId()));
+                log.info("User ID: {}", response.getId());
+                contact.setSupportId(String.valueOf(response.getId()));
                 contactService.updateContact(contact);
                 TimeUnit.SECONDS.sleep(1);
-            } catch (WebClientResponseException e) {
-                log.debug("Adding contact back in queue for retry.", e);
-                userSynchronizeQueue.put(update);
+            } catch (Exception e) {
+                if (update.getAttempts().incrementAndGet() >= configuration.getUserSyncMaxRetryAttempts()) {
+                    log.debug("Unable to synchronize contact {} after 10 retries.", contact.getNin());
+                } else {
+                    log.debug("Adding contact back in queue for retry.", e);
+                    userSynchronizeQueue.offer(update);
+                }
                 break;
             }
         } while (rateLimiter.getRemaining() > 1);

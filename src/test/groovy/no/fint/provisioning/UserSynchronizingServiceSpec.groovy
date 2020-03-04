@@ -7,9 +7,9 @@ import no.fint.provisioning.model.UserSynchronizationObject
 import no.fint.zendesk.RateLimiter
 import no.fint.zendesk.ZenDeskUserService
 import no.fint.zendesk.model.user.User
-import no.fint.zendesk.model.user.UserResponse
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import reactor.core.publisher.Mono
 import spock.lang.Specification
 
 import java.util.concurrent.BlockingQueue
@@ -32,16 +32,14 @@ class UserSynchronizingServiceSpec extends Specification {
             rateLimiter: rateLimiter
     )
 
-
-    def "When contact has zendesk user update is preformed"() {
-
+    def "When contact has zendesk user update is performed"() {
         when:
         userSynchronizingService.synchronize()
 
         then:
-        userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
+        1 * userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
                 new UserSynchronizationObject(new Contact(supportId: "123"))
-        1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as UserSynchronizationObject) >> new UserResponse(new User(id: 123))
+        1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> Mono.just(new User(id: 123))
         1 * contactService.updateContact(_ as Contact) >> true
     }
 
@@ -52,7 +50,7 @@ class UserSynchronizingServiceSpec extends Specification {
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
                 new UserSynchronizationObject(new Contact())
-        1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as UserSynchronizationObject) >> new UserResponse(new User(id: 123))
+        1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> Mono.just(new User(id: 123))
         1 * contactService.updateContact(_ as Contact) >> true
     }
 
@@ -66,34 +64,28 @@ class UserSynchronizingServiceSpec extends Specification {
 
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >> userSynchronizationObject
-        0 * zenDeskUserService.createOrUpdateZenDeskUser(_ as UserSynchronizationObject)
-        0 * userSynchronizeQueue.put(_ as UserSynchronizationObject)
+        1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> Mono.error(new IllegalArgumentException())
+        0 * userSynchronizeQueue.offer(_ as UserSynchronizationObject)
     }
 
     def "When unable to update/create put object back in queue"() {
-
         when:
         userSynchronizingService.synchronize()
 
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
                 new UserSynchronizationObject(new Contact())
-        zenDeskUserService.createOrUpdateZenDeskUser(_ as UserSynchronizationObject) >> {
-            throw WebClientResponseException.create(HttpStatus.TOO_MANY_REQUESTS.value(), null, null, null, null)
-        }
-        1 * userSynchronizeQueue.put(_ as UserSynchronizationObject)
-
+        1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> Mono.error(WebClientResponseException.create(HttpStatus.TOO_MANY_REQUESTS.value(), null, null, null, null))
+        1 * userSynchronizeQueue.offer(_ as UserSynchronizationObject) >> true
     }
 
     def "When the sync queue is empty nothing happens"() {
-
         when:
         userSynchronizingService.synchronize()
 
-
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >> null
-        0 * zenDeskUserService.createOrUpdateZenDeskUser(_ as UserSynchronizationObject)
+        0 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact)
         0 * userSynchronizeQueue.put(_ as UserSynchronizationObject)
     }
 }
