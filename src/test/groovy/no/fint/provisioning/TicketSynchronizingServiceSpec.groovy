@@ -8,9 +8,6 @@ import no.fint.zendesk.model.ticket.Ticket
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
-import reactor.core.scheduler.Scheduler
-import reactor.core.scheduler.Schedulers
-import spock.lang.Ignore
 import spock.lang.Specification
 
 import java.util.concurrent.BlockingQueue

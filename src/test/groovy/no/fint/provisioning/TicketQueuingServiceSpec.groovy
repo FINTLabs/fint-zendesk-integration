@@ -2,7 +2,6 @@ package no.fint.provisioning
 
 import no.fint.ApplicationConfiguration
 import no.fint.provisioning.model.TicketSynchronizationObject
-import no.fint.zendesk.model.ticket.Ticket
 import spock.lang.Specification
 
 class TicketQueuingServiceSpec extends Specification {
