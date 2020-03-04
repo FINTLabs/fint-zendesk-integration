@@ -41,7 +41,6 @@ public class TicketSynchronizingService {
 
     @PostConstruct
     public void init() {
-        start();
         log.info("FINT Zendesk ticket service enabled.");
     }
 
