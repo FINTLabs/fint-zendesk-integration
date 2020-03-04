@@ -88,7 +88,7 @@ public class TicketSynchronizingService {
                 ticketQueue.put(ticket);
                 break;
             }
-        } while (rateLimiter.getRemaining() > 1);
+        } while (rateLimiter.getRemaining() > 0);
         log.info("Pending tickets: {}", ticketQueue.size());
     }
 
