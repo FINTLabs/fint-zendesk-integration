@@ -1,7 +1,6 @@
 package no.fint;
 
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import no.fint.provisioning.model.TicketSynchronizationObject;
 import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.RateLimiter;
@@ -10,15 +9,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-@Slf4j
 @Configuration
 public class ApplicationConfiguration {
 
@@ -40,14 +36,14 @@ public class ApplicationConfiguration {
     private int ticketSyncMaxRetryAttempts;
 
     @Bean
-    public WebClient webClient(RateLimiter rateLimiter) {
+    public WebClient webClient(RateLimiter rateLimiter, RequestLogger requestLogger) {
         return WebClient.builder()
                 .baseUrl(zenDeskBaseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .filter(ExchangeFilterFunctions.basicAuthentication(username, token))
                 .filter(rateLimiter.rateLimiter())
-                .filter(logRequest())
-                .filter(logResponse())
+                .filter(requestLogger.logRequest())
+                .filter(requestLogger.logResponse())
                 .build();
     }
 
@@ -66,18 +62,4 @@ public class ApplicationConfiguration {
         return new LinkedBlockingQueue<>();
     }
 
-    private ExchangeFilterFunction logResponse() {
-        return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
-            log.info("\t{}", clientResponse.statusCode());
-            return Mono.just(clientResponse);
-        });
-    }
-
-    private ExchangeFilterFunction logRequest() {
-        return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
-            log.debug("\tRequest: {} {}", clientRequest.method(), clientRequest.url());
-            clientRequest.headers().forEach((name, values) -> values.forEach(value -> log.debug("\t{}={}", name, value)));
-            return Mono.just(clientRequest);
-        });
-    }
 }
