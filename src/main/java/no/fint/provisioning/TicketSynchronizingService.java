@@ -80,6 +80,7 @@ public class TicketSynchronizingService {
                         .ticket(ticketResponse)
                         .build()
                 );
+                log.info("Ticket #{} created.", ticketResponse.getId());
                 log.info("Remaining: {}", rateLimiter.getRemaining());
 
             } catch (Exception e) {
