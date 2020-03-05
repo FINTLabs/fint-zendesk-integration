@@ -66,9 +66,9 @@ public class ApplicationConfiguration {
         log.info("Connection Provider settings: {}", settings);
         switch (StringUtils.upperCase(settings.getType())) {
             case "FIXED":
-                return ConnectionProvider.fixed("Zendesk", settings.getMaxConnections(), settings.getAcquireTimeout(), settings.getMaxIdleTime(), settings.getMaxLifeTime());
+                return ConnectionProvider.fixed("Zendesk", settings.getMaxConnections(), settings.getAcquireTimeout());
             case "ELASTIC":
-                return ConnectionProvider.elastic("Zendesk", settings.getMaxIdleTime(), settings.getMaxLifeTime());
+                return ConnectionProvider.elastic("Zendesk");
             case "NEW":
                 return ConnectionProvider.newConnection();
             default:
