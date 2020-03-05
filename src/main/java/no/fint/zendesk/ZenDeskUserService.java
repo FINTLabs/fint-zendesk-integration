@@ -29,7 +29,7 @@ public class ZenDeskUserService {
     public Mono<User> createOrUpdateZenDeskUser(Contact contact) {
         return webClient.post()
                 .uri("users/create_or_update.json")
-                .bodyValue(new UserRequest(contactToZenDeskUser(contact)))
+                .syncBody(new UserRequest(contactToZenDeskUser(contact)))
                 .retrieve()
                 .bodyToMono(UserResponse.class)
                 .onErrorResume(response -> {

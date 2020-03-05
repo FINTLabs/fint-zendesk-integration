@@ -20,7 +20,7 @@ public class ZenDeskTicketService {
     public Mono<Ticket> createTicket(Ticket ticket) {
         return webClient.post()
                 .uri("tickets.json")
-                .bodyValue(new TicketRequest(ticket))
+                .syncBody(new TicketRequest(ticket))
                 .retrieve()
                 .bodyToMono(TicketResponse.class)
                 .onErrorResume(response -> {

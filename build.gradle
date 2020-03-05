@@ -36,6 +36,7 @@ dependencies {
     compile('no.fint:fint-cache:2.1.1-beta-1') {
         exclude group: 'no.fint'
     }
+    compile("com.github.springfox.loader:springfox-loader:2.0.0")
 
     implementation 'org.apache.commons:commons-lang3:3.9'
 
