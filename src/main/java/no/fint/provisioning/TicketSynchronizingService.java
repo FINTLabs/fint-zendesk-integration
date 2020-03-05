@@ -8,6 +8,7 @@ import no.fint.zendesk.RateLimiter;
 import no.fint.zendesk.ZenDeskTicketService;
 import no.fint.zendesk.model.ticket.Ticket;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Service
 @ConditionalOnProperty("fint.zendesk.tickets.enabled")
 public class TicketSynchronizingService {
+
+    @Value("${fint.zendesk.timeout:PT30S}")
+    private Duration timeout;
 
     @Autowired
     private BlockingQueue<TicketSynchronizationObject> ticketQueue;
@@ -70,7 +74,7 @@ public class TicketSynchronizingService {
             try {
                 Ticket response = zenDeskTicketService
                         .createTicket(ticket.getTicket())
-                        .block(Duration.ofSeconds(30));
+                        .block(timeout);
                 statusCache.put(ticket.getUuid(),
                         TicketStatus
                                 .builder()

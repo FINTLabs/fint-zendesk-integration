@@ -10,6 +10,7 @@ import no.fint.zendesk.RateLimiter;
 import no.fint.zendesk.ZenDeskUserService;
 import no.fint.zendesk.model.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,9 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 public class UserSynchronizingService {
+
+    @Value("${fint.zendesk.timeout:PT30S}")
+    private Duration timeout;
 
     @Autowired
     private ZenDeskUserService zenDeskUserService;
@@ -49,7 +53,7 @@ public class UserSynchronizingService {
             try {
                 User response = zenDeskUserService
                         .createOrUpdateZenDeskUser(update.getContact())
-                        .block(Duration.ofSeconds(30));
+                        .block(timeout);
                 log.info("Remaining: {}", rateLimiter.getRemaining());
                 log.info("User ID: {}", response.getId());
                 contact.setSupportId(String.valueOf(response.getId()));
