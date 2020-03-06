@@ -49,9 +49,10 @@ public class TicketSynchronizingService {
         log.info("FINT Zendesk ticket service enabled.");
     }
 
-    @Scheduled(fixedDelayString = "${fint.zendesk.ticket.sync.rate:60000}")
+    @Scheduled(fixedDelayString = "${fint.zendesk.ticket.sync.rate:10000}")
     public void start() {
         if (running.compareAndSet(false, true)) {
+            log.debug("Creating new thread ...");
             new Thread(() -> {
                 try {
                     synchronize();
@@ -67,7 +68,8 @@ public class TicketSynchronizingService {
     private void synchronize() throws InterruptedException {
         log.info("Starting ticket synchronization with {} pending tickets..", ticketQueue.size());
         do {
-            TicketSynchronizationObject ticket = ticketQueue.poll(1, TimeUnit.MINUTES);
+            log.debug("Polling ...");
+            TicketSynchronizationObject ticket = ticketQueue.poll(10, TimeUnit.SECONDS);
 
             if (ticket == null) continue;
 
