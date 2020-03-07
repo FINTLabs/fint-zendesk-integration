@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import no.fint.portal.model.contact.Contact;
 import no.fint.portal.model.organisation.Organisation;
 import no.fint.portal.model.organisation.OrganisationService;
-import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.model.user.User;
 import no.fint.zendesk.model.user.UserRequest;
 import no.fint.zendesk.model.user.UserResponse;
@@ -27,11 +26,7 @@ public class ZenDeskUserService {
     @Autowired
     private WebClient webClient;
 
-    public UserResponse createOrUpdateZenDeskUser(UserSynchronizationObject userSynchronizationObject) {
-        Contact contact = userSynchronizationObject.getContact();
-        log.debug("Updating contact {}", contact.getNin());
-        log.debug("\tAttempt: {}", userSynchronizationObject.getAttempts());
-
+    public Mono<User> createOrUpdateZenDeskUser(Contact contact) {
         return webClient.post()
                 .uri("users/create_or_update.json")
                 .syncBody(new UserRequest(contactToZenDeskUser(contact)))
@@ -43,13 +38,13 @@ public class ZenDeskUserService {
                     }
                     return Mono.error(response);
                 })
-                .block();
+                .map(UserResponse::getUser);
     }
 
-    public void deleteZenDeskUser(String id) {
+    public Mono<User> deleteZenDeskUser(String id) {
         log.debug("Deleting user {}", id);
 
-        webClient.delete()
+        return webClient.delete()
                 .uri(String.format("users/%s.json", id))
                 .retrieve()
                 .bodyToMono(UserResponse.class)
@@ -59,7 +54,7 @@ public class ZenDeskUserService {
                     }
                     return Mono.error(response);
                 })
-                .block();
+                .map(UserResponse::getUser);
     }
 
     private User contactToZenDeskUser(Contact contact) {
