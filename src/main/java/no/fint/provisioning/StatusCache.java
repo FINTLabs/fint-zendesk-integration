@@ -14,7 +14,7 @@ public class StatusCache {
 
     private Cache<String, TicketStatus> cache;
 
-    @Value("${no.fint.consumer.status-cache:expireAfterAccess=30m,expireAfterWrite=6h}")
+    @Value("${no.fint.cache-spec:expireAfterWrite=6h}")
     private String cacheSpec;
 
     @PostConstruct

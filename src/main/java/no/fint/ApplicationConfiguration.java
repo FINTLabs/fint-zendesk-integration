@@ -5,20 +5,24 @@ import lombok.extern.slf4j.Slf4j;
 import no.fint.provisioning.model.RequestSynchronizationObject;
 import no.fint.provisioning.model.TicketSynchronizationObject;
 import no.fint.provisioning.model.UserSynchronizationObject;
+import no.fint.zendesk.RateLimiter;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.http.client.reactive.ReactorResourceFactory;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-@Slf4j
 @Configuration
+@Slf4j
 public class ApplicationConfiguration {
 
     @Value("${fint.zendesk.base-url:https://fintlabs.zendesk.com/api/v2/}")
@@ -39,14 +43,37 @@ public class ApplicationConfiguration {
     private int ticketSyncMaxRetryAttempts;
 
     @Bean
-    public WebClient webClient() {
-        return WebClient.builder()
+    public WebClient webClient(
+            WebClient.Builder builder,
+            ReactorResourceFactory factory,
+            ConnectionProvider connectionProvider,
+            RateLimiter rateLimiter,
+            RequestLogger requestLogger) {
+        factory.setConnectionProvider(connectionProvider);
+        return builder
+                .clientConnector(new ReactorClientHttpConnector(factory, HttpClient::secure))
                 .baseUrl(zenDeskBaseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
                 .filter(ExchangeFilterFunctions.basicAuthentication(username, token))
-                .filter(logRequest())
-                .filter(logResponse())
+                .filter(rateLimiter.rateLimiter())
+                .filter(requestLogger.logRequest())
+                .filter(requestLogger.logResponse())
                 .build();
+    }
+
+    @Bean
+    public ConnectionProvider connectionProvider(ConnectionProviderSettings settings) {
+        log.info("Connection Provider settings: {}", settings);
+        switch (StringUtils.upperCase(settings.getType())) {
+            case "FIXED":
+                return ConnectionProvider.fixed("Zendesk", settings.getMaxConnections(), settings.getAcquireTimeout());
+            case "ELASTIC":
+                return ConnectionProvider.elastic("Zendesk");
+            case "NEW":
+                return ConnectionProvider.newConnection();
+            default:
+                throw new IllegalArgumentException("Illegal connection provider type: " + settings.getType());
+        }
     }
 
     @Bean
@@ -69,19 +96,4 @@ public class ApplicationConfiguration {
         return new LinkedBlockingQueue<>();
     }
 
-
-    private ExchangeFilterFunction logResponse() {
-        return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
-            log.info("\t{}", clientResponse.statusCode());
-            return Mono.just(clientResponse);
-        });
-    }
-
-    private ExchangeFilterFunction logRequest() {
-        return ExchangeFilterFunction.ofRequestProcessor(clientRequest -> {
-            log.debug("\tRequest: {} {}", clientRequest.method(), clientRequest.url());
-            clientRequest.headers().forEach((name, values) -> values.forEach(value -> log.debug("\t{}={}", name, value)));
-            return Mono.just(clientRequest);
-        });
-    }
 }

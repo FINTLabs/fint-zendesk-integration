@@ -1,6 +1,6 @@
 package no.fint.zendesk
 
-import no.fint.provisioning.model.TicketSynchronizationObject
+
 import no.fint.zendesk.model.ticket.Ticket
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -28,7 +28,7 @@ class ZenDeskTicketServiceSpec extends Specification {
         )
 
         when:
-        zenDeskTicketService.createTicket(new TicketSynchronizationObject(new Ticket()))
+        zenDeskTicketService.createTicket(new Ticket())
 
         then:
         noExceptionThrown()
@@ -38,7 +38,7 @@ class ZenDeskTicketServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.UNPROCESSABLE_ENTITY.value()))
 
         when:
-        zenDeskTicketService.createTicket(new TicketSynchronizationObject(new Ticket()))
+        zenDeskTicketService.createTicket(new Ticket()).block()
 
         then:
         thrown(WebClientResponseException)

@@ -12,8 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
-import javax.servlet.http.HttpServletRequest;
+import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URI;
 
@@ -39,18 +38,22 @@ public class TicketController {
     private RequestQueuingService requestQueuingService;
 
     @PostMapping
-    public ResponseEntity createTicket(@RequestBody @Valid Ticket ticket, HttpServletRequest request) {
+    public ResponseEntity createTicket(@RequestBody @Valid Ticket ticket) {
         TicketSynchronizationObject ticketSynchronizationObject = new TicketSynchronizationObject(ticket);
-        ticketQueuingService.put(ticketSynchronizationObject);
+        if (!ticketQueuingService.put(ticketSynchronizationObject)) {
+            return ResponseEntity.badRequest().header("x-error-message", "Unable to queue ticket for processing").build();
+        }
 
         TicketStatus ticketStatus = TicketStatus.builder().status(TicketStatus.Status.RUNNING).ticket(ticket).build();
         statusCache.put(ticketSynchronizationObject.getUuid(), ticketStatus);
 
-
-        URI location = UriComponentsBuilder.fromUriString(request.getRequestURL().toString())
-                .path("/status/{id}")
-                .buildAndExpand(ticketSynchronizationObject.getUuid())
+        URI location = MvcUriComponentsBuilder.fromMethodCall(
+                MvcUriComponentsBuilder
+                        .controller(TicketController.class)
+                        .getStatus(ticketSynchronizationObject.getUuid()))
+                .build()
                 .toUri();
+        log.debug("Location: {}", location);
         return ResponseEntity.status(HttpStatus.ACCEPTED).location(location).build();
     }
 

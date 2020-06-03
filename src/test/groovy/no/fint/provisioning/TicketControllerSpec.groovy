@@ -42,7 +42,7 @@ class TicketControllerSpec extends MockMvcSpecification {
                 .content(json))
 
         then:
-        1 * ticketQueuingService.put(_)
+        1 * ticketQueuingService.put(_) >> true
         response.andExpect(status().isAccepted())
     }
 

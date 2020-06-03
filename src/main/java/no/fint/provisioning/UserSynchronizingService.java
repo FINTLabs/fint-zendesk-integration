@@ -3,13 +3,18 @@ package no.fint.provisioning;
 
 import lombok.extern.slf4j.Slf4j;
 import no.fint.ApplicationConfiguration;
+import no.fint.portal.model.contact.Contact;
+import no.fint.portal.model.contact.ContactService;
 import no.fint.provisioning.model.UserSynchronizationObject;
+import no.fint.zendesk.RateLimiter;
 import no.fint.zendesk.ZenDeskUserService;
-import org.apache.commons.lang3.StringUtils;
+import no.fint.zendesk.model.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+
+import java.time.Duration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -17,59 +22,54 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class UserSynchronizingService {
 
+    @Value("${fint.zendesk.timeout:PT30S}")
+    private Duration timeout;
+
     @Autowired
     private ZenDeskUserService zenDeskUserService;
 
     @Autowired
     private ApplicationConfiguration configuration;
-    
+
     @Autowired
     private BlockingQueue<UserSynchronizationObject> userSynchronizeQueue;
 
     @Autowired
-    private BlockingQueue<String> userDeleteQueue;
+    private RateLimiter rateLimiter;
 
-    @Scheduled(fixedRateString = "${fint.zendesk.user.sync.rate:60000}")
+    @Autowired
+    private ContactService contactService;
+
+    @Scheduled(fixedDelayString = "${fint.zendesk.user.sync.rate:60000}")
     private void synchronize() throws InterruptedException {
-        UserSynchronizationObject contact = userSynchronizeQueue.poll(1, TimeUnit.SECONDS);
+        log.info("Starting user sync with {} pending updates...", userSynchronizeQueue.size());
+        do {
+            UserSynchronizationObject update = userSynchronizeQueue.poll(10, TimeUnit.SECONDS);
 
-        if (contact == null) return;
+            if (update == null) break;
+            Contact contact = update.getContact();
 
-        if (contact.getAttempts().incrementAndGet() > configuration.getUserSyncMaxRetryAttempts()) {
-            log.debug("Unable to synchronize contact {} after 10 retries.", contact.getContact().getNin());
-            return;
-        }
 
-        try {
-            if (contactHasZenDeskUser(contact)) {
-                zenDeskUserService.updateZenDeskUser(contact);
-            } else {
-                zenDeskUserService.createZenDeskUsers(contact);
+            try {
+                User response = zenDeskUserService
+                        .createOrUpdateZenDeskUser(update.getContact())
+                        .block(timeout);
+                log.info("Remaining: {}", rateLimiter.getRemaining());
+                log.info("User ID: {}", response.getId());
+                contact.setSupportId(String.valueOf(response.getId()));
+                contactService.updateContact(contact);
+                TimeUnit.SECONDS.sleep(1);
+            } catch (Exception e) {
+                if (update.getAttempts().incrementAndGet() >= configuration.getUserSyncMaxRetryAttempts()) {
+                    log.debug("Unable to synchronize contact {} after 10 retries.", contact.getNin());
+                } else {
+                    log.debug("Adding contact back in queue for retry.", e);
+                    userSynchronizeQueue.offer(update);
+                }
+                break;
             }
-        } catch (WebClientResponseException e) {
-            log.debug("Adding contact back in queue for retry.", e);
-            userSynchronizeQueue.put(contact);
-        }
-        log.debug("{} contacts in synchronize queue", userSynchronizeQueue.size());
+        } while (rateLimiter.getRemaining() > 1);
+        log.info("Pending contacts: {}", userSynchronizeQueue.size());
     }
-
-    private boolean contactHasZenDeskUser(UserSynchronizationObject contact) {
-        return StringUtils.isNotBlank(contact.getContact().getSupportId());
-    }
-
-    @Scheduled(fixedRateString = "${fint.zendesk.user.delete.rate:600000}")
-    private void clean() throws InterruptedException {
-
-        String id = userDeleteQueue.poll(1, TimeUnit.SECONDS);
-
-        if (id == null) return;
-
-        try {
-            zenDeskUserService.deleteZenDeskUser(id);
-        } catch (WebClientResponseException e) {
-            log.error("Unable to delete user " + id, e);
-        }
-    }
-
 
 }
