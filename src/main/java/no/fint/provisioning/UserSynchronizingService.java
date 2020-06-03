@@ -11,6 +11,7 @@ import no.fint.zendesk.ZenDeskUserService;
 import no.fint.zendesk.model.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
+@ConditionalOnProperty("fint.zendesk.users.enabled")
 public class UserSynchronizingService {
 
     @Value("${fint.zendesk.timeout:PT30S}")
