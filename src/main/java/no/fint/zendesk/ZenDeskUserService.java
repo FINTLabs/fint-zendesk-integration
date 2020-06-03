@@ -11,6 +11,7 @@ import no.fint.zendesk.model.user.UserRequest;
 import no.fint.zendesk.model.user.UserResponse;
 import no.fint.zendesk.model.user.UsersResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@ConditionalOnProperty("fint.zendesk.users.enabled")
 public class ZenDeskUserService {
 
     @Autowired
