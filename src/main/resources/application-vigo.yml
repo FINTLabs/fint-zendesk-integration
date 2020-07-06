@@ -55,7 +55,7 @@ fint:
         value: task
         help: Velg denne om du har forslag til videreutvikling.
     ticket-category:
-      - name: QlikSense
+      - name: Qlik Sense
       - name: QlikView
       - name: Hub
       - name: NPrinting
