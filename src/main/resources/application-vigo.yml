@@ -57,7 +57,7 @@ fint:
     ticket-category:
       - name: Qlik Sense
       - name: QlikView
-      - name: Hub
+      - name: Login-problemer
       - name: NPrinting
       - name: Analyse
         help: Her krysser du av dersom du har spørsmål knyttet til analyser av elev- og søkerdata som f.eks. overganger og utvalgsdefinisjoner.
