@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Getter
@@ -16,11 +17,12 @@ public class TicketQueuingService {
     @Autowired
     private BlockingQueue<TicketSynchronizationObject> ticketQueue;
 
-    public void put(TicketSynchronizationObject ticket) {
+    public boolean put(TicketSynchronizationObject ticket) {
         try {
-            ticketQueue.put(ticket);
+            return ticketQueue.offer(ticket, 10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             log.error("Unable to put ticket on queue", e);
         }
+        return false;
     }
 }

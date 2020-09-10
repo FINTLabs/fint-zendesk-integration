@@ -41,7 +41,7 @@ class ZenDeskUserServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.UNPROCESSABLE_ENTITY.value()))
 
         when:
-        zenDeskUserService.createOrUpdateZenDeskUser(contact)
+        zenDeskUserService.createOrUpdateZenDeskUser(contact).block()
 
         then:
         thrown(WebClientResponseException)
@@ -63,7 +63,7 @@ class ZenDeskUserServiceSpec extends Specification {
         server.enqueue(new MockResponse().setResponseCode(HttpStatus.NOT_FOUND.value()))
 
         when:
-        zenDeskUserService.deleteZenDeskUser(contact)
+        zenDeskUserService.deleteZenDeskUser(contact).block()
 
         then:
         thrown(WebClientResponseException)

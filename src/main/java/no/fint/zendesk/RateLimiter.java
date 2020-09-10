@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono;
 public class RateLimiter {
 
     @Getter
-    private volatile int remaining;
+    private volatile int remaining = 2;
 
     public ExchangeFilterFunction rateLimiter() {
         return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {

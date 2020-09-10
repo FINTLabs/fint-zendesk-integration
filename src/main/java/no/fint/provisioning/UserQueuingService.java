@@ -42,8 +42,8 @@ public class UserQueuingService {
                 .stream()
                 .map(c -> new UserSynchronizationObject(c, UserSynchronizationObject.Operation.UPDATE))
                 .collect(Collectors.toList()));
-        log.info("{} contacts needs to be queued for synchronization.", contactCache.getSince(lastUpdated).count());
-        contactCache.getSince(lastUpdated).forEach(this::putOnSynchronizeQueue);
+        long count = contactCache.getSince(lastUpdated).peek(this::putOnSynchronizeQueue).count();
+        log.info("{} contacts queued for synchronization, new queue size {}", count, userSynchronizeQueue.size());
         lastUpdated = contactCache.getLastUpdated();
     }
 
@@ -51,11 +51,8 @@ public class UserQueuingService {
     private void putOnSynchronizeQueue(CacheObject<UserSynchronizationObject> contactCacheObject) {
         try {
             userSynchronizeQueue.put(contactCacheObject.getObject());
-            log.debug("New contact added to synchronize queue");
-            log.debug("{} contacts in synchronize queue", userSynchronizeQueue.size());
         } catch (InterruptedException e) {
             log.error("Unable to put contact to synchronize queue: {}", e.getMessage());
         }
     }
-
 }

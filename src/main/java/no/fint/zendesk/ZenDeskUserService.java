@@ -26,9 +26,7 @@ public class ZenDeskUserService {
     @Autowired
     private WebClient webClient;
 
-    public UserResponse createOrUpdateZenDeskUser(Contact contact) {
-        log.debug("Updating contact {}", contact.getNin());
-
+    public Mono<User> createOrUpdateZenDeskUser(Contact contact) {
         return webClient.post()
                 .uri("users/create_or_update.json")
                 .syncBody(new UserRequest(contactToZenDeskUser(contact)))
@@ -40,13 +38,13 @@ public class ZenDeskUserService {
                     }
                     return Mono.error(response);
                 })
-                .block();
+                .map(UserResponse::getUser);
     }
 
-    public void deleteZenDeskUser(Contact contact) {
+    public Mono<Void> deleteZenDeskUser(Contact contact) {
         log.debug("Deleting user {}", contact);
         User user = contactToZenDeskUser(contact);
-        webClient.delete()
+        return webClient.delete()
                 .uri("users/destroy_many.json?external_ids={external_ids}", user.getExternalId())
                 .retrieve()
                 .bodyToMono(Void.class)
@@ -55,8 +53,7 @@ public class ZenDeskUserService {
                         log.info("\t> Body: {}", ((WebClientResponseException) response).getResponseBodyAsString());
                     }
                     return Mono.error(response);
-                })
-                .block();
+                });
     }
 
     private User contactToZenDeskUser(Contact contact) {
