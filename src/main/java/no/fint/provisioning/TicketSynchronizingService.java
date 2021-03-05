@@ -67,7 +67,7 @@ public class TicketSynchronizingService {
 
     private void synchronize() throws InterruptedException {
         log.info("Starting ticket synchronization with {} pending tickets..", ticketQueue.size());
-        do {
+        while (rateLimiter.getRemaining() > 0) {
             log.debug("Polling ...");
             TicketSynchronizationObject ticket = ticketQueue.poll(10, TimeUnit.SECONDS);
 
@@ -96,7 +96,7 @@ public class TicketSynchronizingService {
                 }
                 break;
             }
-        } while (rateLimiter.getRemaining() > 0);
+        }
         log.info("Pending tickets: {}", ticketQueue.size());
     }
 

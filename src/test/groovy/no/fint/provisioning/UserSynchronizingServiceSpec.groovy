@@ -22,7 +22,7 @@ class UserSynchronizingServiceSpec extends Specification {
     private def userSynchronizeQueue = Mock(BlockingQueue)
     private def contactService = Mock(ContactService)
     private def rateLimiter = Mock(RateLimiter) {
-        _ * getRemaining() >> 0
+        _ * getRemaining() >>> [2,0]
     }
     private def userSynchronizingService = new UserSynchronizingService(
             zenDeskUserService: zenDeskUserService,

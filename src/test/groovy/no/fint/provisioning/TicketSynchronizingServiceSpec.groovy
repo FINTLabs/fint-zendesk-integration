@@ -19,7 +19,7 @@ class TicketSynchronizingServiceSpec extends Specification {
     private def configuration = new ApplicationConfiguration(ticketSyncMaxRetryAttempts: 10)
     private def zenDeskTicketService = Mock(ZenDeskTicketService)
     private def rateLimiter = Mock(RateLimiter) {
-        _ * getRemaining() >> 0
+        _ * getRemaining() >>> [2,0]
     }
     private def ticketSynchronizingService = new TicketSynchronizingService(
             ticketQueue: ticketQueue,

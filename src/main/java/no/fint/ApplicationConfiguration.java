@@ -77,18 +77,33 @@ public class ApplicationConfiguration {
     }
 
     @Bean
-    public BlockingQueue<UserSynchronizationObject> userSynchronizeQueue() {
-        return new LinkedBlockingQueue<>();
+    public BlockingQueue<UserSynchronizationObject> userSynchronizeQueue(
+            @Value("${fint.zendesk.user.queue:0}") int queueLength
+    ) {
+        if (queueLength <= 0) {
+            return new LinkedBlockingQueue<>();
+        }
+        return new LinkedBlockingQueue<>(queueLength);
     }
 
     @Bean
-    public BlockingQueue<String> userDeleteQueue() {
-        return new LinkedBlockingQueue<>();
+    public BlockingQueue<String> userDeleteQueue(
+            @Value("${fint.zendesk.delete.queue:0}") int queueLength
+    ) {
+        if (queueLength <= 0) {
+            return new LinkedBlockingQueue<>();
+        }
+        return new LinkedBlockingQueue<>(queueLength);
     }
 
     @Bean
-    public BlockingQueue<TicketSynchronizationObject> ticketQueue() {
-        return new LinkedBlockingQueue<>();
+    public BlockingQueue<TicketSynchronizationObject> ticketQueue(
+            @Value("${fint.zendesk.ticket.queue:0}") int queueLength
+    ) {
+        if (queueLength <= 0) {
+            return new LinkedBlockingQueue<>();
+        }
+        return new LinkedBlockingQueue<>(queueLength);
     }
 
 }

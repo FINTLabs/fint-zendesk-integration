@@ -32,7 +32,7 @@ public class TicketController {
     public ResponseEntity createTicket(@RequestBody @Valid Ticket ticket) {
         TicketSynchronizationObject ticketSynchronizationObject = new TicketSynchronizationObject(ticket);
         if (!ticketQueuingService.put(ticketSynchronizationObject)) {
-            return ResponseEntity.badRequest().header("x-error-message", "Unable to queue ticket for processing").build();
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).header("x-error-message", "Unable to queue ticket for processing").build();
         }
 
         TicketStatus ticketStatus = TicketStatus.builder().status(TicketStatus.Status.RUNNING).ticket(ticket).build();

@@ -43,7 +43,7 @@ public class UserSynchronizingService {
     @Scheduled(fixedDelayString = "${fint.zendesk.user.sync.rate:60000}")
     private void synchronize() throws InterruptedException {
         log.info("Starting user sync with {} pending updates...", userSynchronizeQueue.size());
-        do {
+        while (rateLimiter.getRemaining() > 1) {
             UserSynchronizationObject update = userSynchronizeQueue.poll(10, TimeUnit.SECONDS);
 
             if (update == null) break;
@@ -68,7 +68,7 @@ public class UserSynchronizingService {
                 }
                 break;
             }
-        } while (rateLimiter.getRemaining() > 1);
+        }
         log.info("Pending contacts: {}", userSynchronizeQueue.size());
     }
 
