@@ -49,34 +49,37 @@ public class UserSynchronizingService {
 
             if (update == null) break;
             Contact contact = update.getContact();
+            final String name = contact.getFirstName() + " " + contact.getLastName();
 
             try {
-                if (StringUtils.isNumeric(contact.getSupportId())
-                        && contact.getLegal().isEmpty()
-                        && contact.getTechnical().isEmpty()) {
-                    log.info("Deleting user {} {}", contact.getFirstName(), contact.getLastName());
-                    final User response = zenDeskUserService
-                            .deleteZenDeskUser(contact.getSupportId())
-                            .block(timeout);
-                    log.debug("Remaining: {}", rateLimiter.getRemaining());
-                    log.debug("User ID: {}", response.getId());
-                    contact.setSupportId(null);
+                // Only create users for contacts who are related to an organisation.
+                if (contact.getLegal().isEmpty() && contact.getTechnical().isEmpty()) {
+                    if (StringUtils.isNumeric(contact.getSupportId())) {
+                        log.info("Deleting user {}", name);
+                        final User response = zenDeskUserService
+                                .deleteZenDeskUser(contact.getSupportId())
+                                .block(timeout);
+                        log.debug("Remaining: {}", rateLimiter.getRemaining());
+                        log.debug("User ID: {}", response.getId());
+                        contact.setSupportId(null);
+                        contactService.updateContact(contact);
+                    }
                 } else {
-                    log.info("Updating user {} {}", contact.getFirstName(), contact.getLastName());
+                    log.info("Updating user {}", name);
                     User response = zenDeskUserService
                             .createOrUpdateZenDeskUser(contact)
                             .block(timeout);
                     log.debug("Remaining: {}", rateLimiter.getRemaining());
                     log.debug("User ID: {}", response.getId());
                     contact.setSupportId(String.valueOf(response.getId()));
+                    contactService.updateContact(contact);
                 }
-                contactService.updateContact(contact);
                 TimeUnit.SECONDS.sleep(1);
             } catch (Exception e) {
                 if (update.getAttempts().incrementAndGet() >= configuration.getUserSyncMaxRetryAttempts()) {
-                    log.warn("Unable to synchronize contact {} after 10 retries.", contact.getNin());
+                    log.warn("Unable to synchronize contact {} after 10 retries.", name);
                 } else {
-                    log.debug("Adding contact back in queue for retry.", e);
+                    log.debug("Adding contact {} back in queue for retry.", name, e);
                     userSynchronizeQueue.offer(update);
                 }
                 break;
