@@ -1,4 +1,4 @@
-FROM gradle:5.4.1-jdk11 as builder
+FROM gradle:6.8.1-jdk11 as builder
 USER root
 COPY . .
 ARG apiVersion

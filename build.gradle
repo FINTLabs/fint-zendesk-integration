@@ -1,5 +1,6 @@
 plugins {
-    id 'org.springframework.boot' version '2.1.18.RELEASE'
+    id 'org.springframework.boot' version '2.4.3'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
     id 'groovy'
     id "com.github.ben-manes.versions" version "0.21.0"
@@ -38,6 +39,7 @@ dependencies {
     }
     //compile("com.github.springfox.loader:springfox-loader:2.0.0")
 
+    implementation 'javax.validation:validation-api:2.0.1.Final'
     implementation 'org.apache.commons:commons-lang3:3.9'
 
     compileOnly 'org.projectlombok:lombok'
@@ -46,7 +48,7 @@ dependencies {
     testImplementation('no.fint:fint-test-utils:0.0.6')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
-    testImplementation('org.spockframework:spock-spring:1.2-groovy-2.5')
+    testImplementation('org.spockframework:spock-spring:2.0-groovy-2.5')
     testImplementation('com.squareup.okhttp3:mockwebserver:3.14.0')
 
 }
