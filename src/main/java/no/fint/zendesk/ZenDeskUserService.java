@@ -86,7 +86,7 @@ public class ZenDeskUserService {
     private String getDetails(Contact contact) {
         StringBuilder stringBuilder = new StringBuilder();
 
-        if (contact.getLegal().size() > 0) {
+        if (!contact.getLegal().isEmpty()) {
             stringBuilder.append("Juridisk kontaktperson for:\n");
             contact.getLegal().forEach(dn -> {
                 Optional<Organisation> organisation = organisationService.getOrganisationByDn(dn);
@@ -95,7 +95,7 @@ public class ZenDeskUserService {
             stringBuilder.append("\n\n");
         }
 
-        if (contact.getTechnical().size() > 0) {
+        if (!contact.getTechnical().isEmpty()) {
             stringBuilder.append("Teknisk kontaktperson for:\n");
             contact.getTechnical().forEach(dn -> {
                 Optional<Organisation> organisation = organisationService.getOrganisationByDn(dn);

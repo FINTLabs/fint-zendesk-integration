@@ -9,6 +9,7 @@ import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.RateLimiter;
 import no.fint.zendesk.ZenDeskUserService;
 import no.fint.zendesk.model.user.User;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -49,14 +50,24 @@ public class UserSynchronizingService {
             if (update == null) break;
             Contact contact = update.getContact();
 
-
             try {
-                User response = zenDeskUserService
-                        .createOrUpdateZenDeskUser(update.getContact())
-                        .block(timeout);
-                log.info("Remaining: {}", rateLimiter.getRemaining());
-                log.info("User ID: {}", response.getId());
-                contact.setSupportId(String.valueOf(response.getId()));
+                if (StringUtils.isNumeric(contact.getSupportId())
+                        && contact.getLegal().isEmpty()
+                        && contact.getTechnical().isEmpty()) {
+                    final User response = zenDeskUserService
+                            .deleteZenDeskUser(contact.getSupportId())
+                            .block(timeout);
+                    log.info("Remaining: {}", rateLimiter.getRemaining());
+                    log.info("User ID: {}", response.getId());
+                    contact.setSupportId(null);
+                } else {
+                    User response = zenDeskUserService
+                            .createOrUpdateZenDeskUser(contact)
+                            .block(timeout);
+                    log.info("Remaining: {}", rateLimiter.getRemaining());
+                    log.info("User ID: {}", response.getId());
+                    contact.setSupportId(String.valueOf(response.getId()));
+                }
                 contactService.updateContact(contact);
                 TimeUnit.SECONDS.sleep(1);
             } catch (Exception e) {

@@ -32,31 +32,32 @@ class UserSynchronizingServiceSpec extends Specification {
             rateLimiter: rateLimiter
     )
 
-    def "When contact has zendesk user update is performed"() {
+    def "Update Zendesk user"() {
         when:
         userSynchronizingService.synchronize()
 
         then:
         1 * userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
-                new UserSynchronizationObject(new Contact(supportId: "123"))
+                new UserSynchronizationObject(new Contact(supportId: "123", legal: ['abc']))
         1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> Mono.just(new User(id: 123))
         1 * contactService.updateContact(_ as Contact) >> true
     }
 
-    def "When contact don't have zendesk user create is preformed"() {
+    def "Delete Zendesk user if no legal or technical roles"() {
         when:
         userSynchronizingService.synchronize()
 
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
-                new UserSynchronizationObject(new Contact())
-        1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> Mono.just(new User(id: 123))
+                new UserSynchronizationObject(new Contact(supportId: '123'))
+        0 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> Mono.just(new User(id: 123))
+        1 * zenDeskUserService.deleteZenDeskUser('123') >> Mono.just(new User(id: 123))
         1 * contactService.updateContact(_ as Contact) >> true
     }
 
     def "If max retries is excised nothing is done"() {
         given:
-        def userSynchronizationObject = new UserSynchronizationObject(new Contact(supportId: "123"))
+        def userSynchronizationObject = new UserSynchronizationObject(new Contact(supportId: "123", legal: ['abc']))
         userSynchronizationObject.attempts.addAndGet(10)
 
         when:
