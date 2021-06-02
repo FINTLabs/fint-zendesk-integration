@@ -54,25 +54,27 @@ public class UserSynchronizingService {
                 if (StringUtils.isNumeric(contact.getSupportId())
                         && contact.getLegal().isEmpty()
                         && contact.getTechnical().isEmpty()) {
+                    log.info("Deleting user {} {}", contact.getFirstName(), contact.getLastName());
                     final User response = zenDeskUserService
                             .deleteZenDeskUser(contact.getSupportId())
                             .block(timeout);
-                    log.info("Remaining: {}", rateLimiter.getRemaining());
-                    log.info("User ID: {}", response.getId());
+                    log.debug("Remaining: {}", rateLimiter.getRemaining());
+                    log.debug("User ID: {}", response.getId());
                     contact.setSupportId(null);
                 } else {
+                    log.info("Updating user {} {}", contact.getFirstName(), contact.getLastName());
                     User response = zenDeskUserService
                             .createOrUpdateZenDeskUser(contact)
                             .block(timeout);
-                    log.info("Remaining: {}", rateLimiter.getRemaining());
-                    log.info("User ID: {}", response.getId());
+                    log.debug("Remaining: {}", rateLimiter.getRemaining());
+                    log.debug("User ID: {}", response.getId());
                     contact.setSupportId(String.valueOf(response.getId()));
                 }
                 contactService.updateContact(contact);
                 TimeUnit.SECONDS.sleep(1);
             } catch (Exception e) {
                 if (update.getAttempts().incrementAndGet() >= configuration.getUserSyncMaxRetryAttempts()) {
-                    log.debug("Unable to synchronize contact {} after 10 retries.", contact.getNin());
+                    log.warn("Unable to synchronize contact {} after 10 retries.", contact.getNin());
                 } else {
                     log.debug("Adding contact back in queue for retry.", e);
                     userSynchronizeQueue.offer(update);
