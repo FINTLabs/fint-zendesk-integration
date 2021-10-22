@@ -51,13 +51,16 @@ fint:
       - name: Hendelse
         value: incident
         help: Velg denne om det er en ikke planlagt hendelse/forstyrrelse/feil på en tjeneste.
-      - name: Videreutvikling
-        value: task
-        help: Velg denne om du har forslag til videreutvikling.
+      
     ticket-category:
       - name: Qlik Sense
-      - name: QlikView
-      - name: Login-problemer
+      - name: Får ikke tilgang til løsningen
       - name: NPrinting
       - name: Analyse
+      - name: Sharepoint
+      - name: Fagopplæring
+      - name: Inntak
+      - name: Skole
+      - name: VIS
+      - name: Annet
         help: Her krysser du av dersom du har spørsmål knyttet til analyser av elev- og søkerdata som f.eks. overganger og utvalgsdefinisjoner.
