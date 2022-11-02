@@ -6,7 +6,6 @@ import no.fint.provisioning.model.TicketSynchronizationObject;
 import no.fint.zendesk.model.ticket.Ticket;
 import no.fint.zendesk.model.ticket.TicketPriority;
 import no.fint.zendesk.model.ticket.TicketType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBui
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -22,14 +22,17 @@ import java.util.Arrays;
 @RequestMapping("tickets")
 public class TicketController {
 
-    @Autowired
-    private TicketQueuingService ticketQueuingService;
+    private final TicketQueuingService ticketQueuingService;
 
-    @Autowired
-    private StatusCache statusCache;
+    private final StatusCache statusCache;
+
+    public TicketController(TicketQueuingService ticketQueuingService, StatusCache statusCache) {
+        this.ticketQueuingService = ticketQueuingService;
+        this.statusCache = statusCache;
+    }
 
     @PostMapping
-    public ResponseEntity createTicket(@RequestBody @Valid Ticket ticket) {
+    public ResponseEntity<Void> createTicket(@RequestBody @Valid Ticket ticket) {
         TicketSynchronizationObject ticketSynchronizationObject = new TicketSynchronizationObject(ticket);
         if (!ticketQueuingService.put(ticketSynchronizationObject)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).header("x-error-message", "Unable to queue ticket for processing").build();
@@ -39,9 +42,9 @@ public class TicketController {
         statusCache.put(ticketSynchronizationObject.getUuid(), ticketStatus);
 
         URI location = MvcUriComponentsBuilder.fromMethodCall(
-                MvcUriComponentsBuilder
-                        .controller(TicketController.class)
-                        .getStatus(ticketSynchronizationObject.getUuid()))
+                        MvcUriComponentsBuilder
+                                .controller(TicketController.class)
+                                .getStatus(ticketSynchronizationObject.getUuid()))
                 .build()
                 .toUri();
         log.debug("Location: {}", location);
@@ -49,7 +52,7 @@ public class TicketController {
     }
 
     @GetMapping("/status/{id}")
-    public ResponseEntity getStatus(@PathVariable String id) {
+    public ResponseEntity<Ticket> getStatus(@PathVariable String id) {
 
         log.debug("/status/{}", id);
 
@@ -73,7 +76,7 @@ public class TicketController {
 
     // TODO: 2019-06-18 Get the codes from the ZenDesk api
     @GetMapping("type")
-    public ResponseEntity getTicketTypes() {
+    public ResponseEntity<List<TicketType>> getTicketTypes() {
         return ResponseEntity.ok(
                 Arrays.asList(
                         TicketType.builder()
@@ -92,7 +95,7 @@ public class TicketController {
 
     // TODO: 2019-06-18 Get the codes from the ZenDesk api
     @GetMapping("priority")
-    public ResponseEntity getTicketPriority() {
+    public ResponseEntity<List<TicketPriority>> getTicketPriority() {
         return ResponseEntity.ok(
                 Arrays.asList(
                         TicketPriority.builder()
@@ -125,7 +128,7 @@ public class TicketController {
                                         "<li>En viss økonomisk skadevirkning.</li>" +
                                         "</ul>" +
                                         "NB! Det forventes at dere er tilgjengelige frem til saken er løst og har mulighet" +
-                                        " til å bistå oss med hjelp og informasjon."+
+                                        " til å bistå oss med hjelp og informasjon." +
                                         "<p>Responstid innen 4 timer.</p>")
                                 .build(),
                         TicketPriority.builder()

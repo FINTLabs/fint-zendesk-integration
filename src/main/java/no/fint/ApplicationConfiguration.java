@@ -5,18 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import no.fint.provisioning.model.TicketSynchronizationObject;
 import no.fint.provisioning.model.UserSynchronizationObject;
 import no.fint.zendesk.RateLimiter;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.http.client.reactive.ReactorResourceFactory;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.resources.ConnectionProvider;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -45,37 +40,16 @@ public class ApplicationConfiguration {
     @Bean
     public WebClient webClient(
             WebClient.Builder builder,
-            ReactorResourceFactory factory,
-            ConnectionProvider connectionProvider,
             RateLimiter rateLimiter,
             RequestLogger requestLogger) {
-        factory.setConnectionProvider(connectionProvider);
         return builder
-                .clientConnector(new ReactorClientHttpConnector(factory, HttpClient::secure))
                 .baseUrl(zenDeskBaseUrl)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .filter(ExchangeFilterFunctions.basicAuthentication(username, token))
                 .filter(rateLimiter.rateLimiter())
                 .filter(requestLogger.logRequest())
                 .filter(requestLogger.logResponse())
                 .build();
-    }
-
-    @Bean
-    public ConnectionProvider connectionProvider(ConnectionProviderSettings settings) {
-        log.info("Connection Provider settings: {}", settings);
-        switch (StringUtils.upperCase(settings.getType())) {
-            /*
-            case "FIXED":
-                return ConnectionProvider.fixed("Zendesk", settings.getMaxConnections(), settings.getAcquireTimeout());
-            case "ELASTIC":
-                return ConnectionProvider.elastic("Zendesk");
-             */
-            case "NEW":
-                return ConnectionProvider.newConnection();
-            default:
-                throw new IllegalArgumentException("Illegal connection provider type: " + settings.getType());
-        }
     }
 
     @Bean
