@@ -42,7 +42,7 @@ public class UserQueuingService {
                 .stream()
                 .map(UserSynchronizationObject::new)
                 .collect(Collectors.toList()));
-        long count = contactCache.getSince(lastUpdated).peek(this::putOnSynchronizeQueue).count();
+        long count = contactCache.streamSince(lastUpdated).peek(this::putOnSynchronizeQueue).count();
         log.info("{} contacts queued for synchronization, new queue size {}", count, userSynchronizeQueue.size());
         lastUpdated = contactCache.getLastUpdated();
     }

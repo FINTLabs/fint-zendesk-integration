@@ -1,10 +1,9 @@
-FROM gradle:5.4.1-jdk11 as builder
+FROM gradle:7.5-jdk17 as builder
 USER root
 COPY . .
-ARG apiVersion
-RUN gradle --no-daemon -PapiVersion=${apiVersion} build
+RUN gradle --no-daemon build
 
-FROM gcr.io/distroless/java:11
+FROM gcr.io/distroless/java17
 ENV JAVA_TOOL_OPTIONS -XX:+ExitOnOutOfMemoryError
-COPY --from=builder /home/gradle/build/libs/fint-zendesk-integration-*.jar /data/app.jar
+COPY --from=builder /home/gradle/build/libs/*.jar /data/app.jar
 CMD ["/data/app.jar"]

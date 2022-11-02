@@ -1,5 +1,6 @@
 plugins {
-    id 'org.springframework.boot' version '2.1.6.RELEASE'
+    id 'org.springframework.boot' version '2.7.5'
+    id 'io.spring.dependency-management' version '1.1.0'
     id 'java'
     id 'groovy'
     id "com.github.ben-manes.versions" version "0.21.0"
@@ -9,8 +10,8 @@ apply plugin: 'io.spring.dependency-management'
 
 group = 'no.fint'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '11'
-targetCompatibility = '11'
+sourceCompatibility = '17'
+targetCompatibility = '17'
 
 configurations {
     compileOnly {
@@ -28,17 +29,27 @@ repositories {
     mavenLocal()
 }
 
+jar {
+    enabled = false
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 
-    compile('no.fint:fint-portal-api:3.12.0-rc-7')
-    compile('no.fint:fint-cache:2.6.1') {
+
+    implementation 'io.netty:netty-resolver-dns-native-macos:4.1.84.Final:osx-aarch_64'
+
+    implementation('no.fint:fint-portal-api:3.15.0') {
+        exclude group: 'io.springfox'
+    }
+    implementation('no.fint:fint-cache:2.8.0') {
         exclude group: 'no.fint'
     }
-    //compile("com.github.springfox.loader:springfox-loader:2.0.0")
 
-    implementation 'org.apache.commons:commons-lang3:3.9'
+    implementation 'javax.validation:validation-api:2.0.1.Final'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
 
     compileOnly 'org.projectlombok:lombok'
 
@@ -47,7 +58,8 @@ dependencies {
     testImplementation('no.fint:fint-test-utils:0.0.6')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
-    testImplementation('org.spockframework:spock-spring:1.2-groovy-2.5')
-    testImplementation('com.squareup.okhttp3:mockwebserver:3.14.0')
+    testImplementation 'org.spockframework:spock-spring:2.3-groovy-3.0'
+    testImplementation 'org.spockframework:spock-core:2.3-groovy-3.0'
+    testImplementation('com.squareup.okhttp3:mockwebserver:4.10.0')
 
 }
