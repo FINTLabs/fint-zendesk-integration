@@ -47,14 +47,13 @@ public class TicketController {
     }
 
     public static URI getUri(String ticketSynchronizationObjectUuid) {
-        URI location = MvcUriComponentsBuilder.fromMethodCall(
+        return MvcUriComponentsBuilder.fromMethodCall(
                 MvcUriComponentsBuilder
                         .controller(TicketController.class)
-                        .getStatus(ticketSynchronizationObject.getUuid()))
+                        .getStatus(ticketSynchronizationObjectUuid))
                 .scheme("https")
                 .build()
                 .toUri();
-        return location;
     }
 
     @GetMapping("/status/{id}")
