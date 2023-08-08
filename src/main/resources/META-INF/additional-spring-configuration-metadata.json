@@ -1,0 +1,13 @@
+{
+  "properties": [
+    {
+      "name": "fint.zendesk.users.enabled",
+      "type": "java.lang.String",
+      "description": "Turn on/off user sync."
+    },
+    {
+      "name": "fint.zendesk.tickets.enabled",
+      "type": "java.lang.String",
+      "description": "Turn on/off ticket sync."
+    }
+  ] }

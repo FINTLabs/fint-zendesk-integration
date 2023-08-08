@@ -1,6 +1,6 @@
 package no.fint.zendesk.model.ticket;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Ticket {
     @NotNull
     private String subject;
@@ -37,7 +37,7 @@ public class Ticket {
     private String createdAt;
     private String description;
     private long id;
-    private long assigneeId;
+    private String assigneeId;
     private String url;
     private String status;
 }

@@ -70,17 +70,12 @@ class UserSynchronizingServiceSpec extends Specification {
     }
 
     def "When unable to update/create put object back in queue"() {
-        given:
-        Contact contact = new Contact()
-        contact.setTechnical(["test"])
-        contact.setLegal(["test"])
-
         when:
         userSynchronizingService.synchronize()
 
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
-                new UserSynchronizationObject(contact)
+                new UserSynchronizationObject(new Contact(legal: ['abc'], technical: ['def']))
         1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> Mono.error(WebClientResponseException.create(HttpStatus.TOO_MANY_REQUESTS.value(), null, null, null, null))
         1 * userSynchronizeQueue.offer(_ as UserSynchronizationObject) >> true
     }

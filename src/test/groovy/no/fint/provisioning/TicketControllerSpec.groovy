@@ -18,7 +18,7 @@ class TicketControllerSpec extends MockMvcSpecification {
     private TicketQueuingService ticketQueuingService = Mock()
 
     void setup() {
-        controller = new TicketController(ticketQueuingService: ticketQueuingService, statusCache: Mock(StatusCache))
+        controller = new TicketController(ticketQueuingService, Mock(StatusCache))
         mockMvc = standaloneSetup(controller)
     }
 
@@ -42,7 +42,7 @@ class TicketControllerSpec extends MockMvcSpecification {
 
         when:
         def response = mockMvc.perform(post('/tickets')
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .content(json))
 
         then:
