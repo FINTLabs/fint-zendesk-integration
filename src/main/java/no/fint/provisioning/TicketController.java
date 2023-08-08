@@ -41,14 +41,19 @@ public class TicketController {
         TicketStatus ticketStatus = TicketStatus.builder().status(TicketStatus.Status.RUNNING).ticket(ticket).build();
         statusCache.put(ticketSynchronizationObject.getUuid(), ticketStatus);
 
-        URI location = MvcUriComponentsBuilder.fromMethodCall(
-                        MvcUriComponentsBuilder
-                                .controller(TicketController.class)
-                                .getStatus(ticketSynchronizationObject.getUuid()))
-                .build()
-                .toUri();
+        URI location = getUri(ticketSynchronizationObject.getUuid());
         log.debug("Location: {}", location);
         return ResponseEntity.status(HttpStatus.ACCEPTED).location(location).build();
+    }
+
+    public static URI getUri(String ticketSynchronizationObjectUuid) {
+        return MvcUriComponentsBuilder.fromMethodCall(
+                MvcUriComponentsBuilder
+                        .controller(TicketController.class)
+                        .getStatus(ticketSynchronizationObjectUuid))
+                .scheme("https")
+                .build()
+                .toUri();
     }
 
     @GetMapping("/status/{id}")

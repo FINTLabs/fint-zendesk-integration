@@ -7,6 +7,8 @@ import no.fint.zendesk.model.ticket.Ticket
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
+import org.hamcrest.Matchers
+
 
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -46,6 +48,9 @@ class TicketControllerSpec extends MockMvcSpecification {
         then:
         1 * ticketQueuingService.put(_) >> true
         response.andExpect(status().isAccepted())
+        response.andExpect(header().exists("location"))
+        response.andExpect(header().string(HttpHeaders.LOCATION, Matchers.startsWith("https://localhost/tickets/status/")))
+
     }
 
     def "Get ticket priority"() {
@@ -73,4 +78,5 @@ class TicketControllerSpec extends MockMvcSpecification {
         response.andExpect(status().isOk())
                 .andExpect(jsonPath('$').value(0))
     }
+
 }

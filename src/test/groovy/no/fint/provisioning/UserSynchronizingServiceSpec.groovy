@@ -75,7 +75,7 @@ class UserSynchronizingServiceSpec extends Specification {
 
         then:
         userSynchronizeQueue.poll(_ as Long, _ as TimeUnit) >>
-                new UserSynchronizationObject(new Contact(legal: ['abc']))
+                new UserSynchronizationObject(new Contact(legal: ['abc'], technical: ['def']))
         1 * zenDeskUserService.createOrUpdateZenDeskUser(_ as Contact) >> Mono.error(WebClientResponseException.create(HttpStatus.TOO_MANY_REQUESTS.value(), null, null, null, null))
         1 * userSynchronizeQueue.offer(_ as UserSynchronizationObject) >> true
     }
