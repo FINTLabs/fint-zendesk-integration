@@ -49,7 +49,7 @@ class TicketControllerSpec extends MockMvcSpecification {
         1 * ticketQueuingService.put(_) >> true
         response.andExpect(status().isAccepted())
         response.andExpect(header().exists("location"))
-        response.andExpect(header().string(HttpHeaders.LOCATION, Matchers.startsWith("https://localhost/tickets/status/")))
+        response.andExpect(header().string(HttpHeaders.LOCATION, Matchers.startsWith("https://localhost:80/tickets/status/")))
 
     }
 

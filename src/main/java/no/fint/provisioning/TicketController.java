@@ -52,6 +52,7 @@ public class TicketController {
                         .controller(TicketController.class)
                         .getStatus(ticketSynchronizationObjectUuid))
                 .scheme("https")
+                .port(80)
                 .build()
                 .toUri();
     }
