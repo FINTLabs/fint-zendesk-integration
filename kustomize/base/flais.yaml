@@ -18,7 +18,7 @@ spec:
   image: ghcr.io/fintlabs/fint-zendesk-integration:latest
   url:
     hostname: kunde-beta.felleskomponent.no
-    basePath: /zendesk-integration
+    basePath: /zendesk
   envFrom:
     - secretRef:
         name: fint-portal-user
