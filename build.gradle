@@ -44,6 +44,7 @@ dependencies {
 
     implementation('no.fintlabs:fint-portal-api:3.19.0') {
         exclude group: 'io.springfox'
+        exclude group: 'org.springframework.security.oauth'
     }
     implementation('no.fint:fint-cache:2.8.0') {
         exclude group: 'no.fint'
