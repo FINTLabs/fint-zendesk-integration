@@ -42,7 +42,7 @@ dependencies {
 
     implementation 'io.netty:netty-resolver-dns-native-macos:4.1.84.Final:osx-aarch_64'
 
-    implementation('no.fint:fint-portal-api:3.15.0') {
+    implementation('no.fintlabs:fint-portal-api:3.19.0') {
         exclude group: 'io.springfox'
     }
     implementation('no.fint:fint-cache:2.8.0') {
