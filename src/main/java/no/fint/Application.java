@@ -7,7 +7,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableFintCache
 @EnableScheduling
-//@EnableSpringfox
 @SpringBootApplication
 public class Application {
 
